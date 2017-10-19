@@ -51,7 +51,7 @@ do
 
   # Call IntaRNA with the given settings
 
-  # Normal IntaRNA case
+  # Normal IntaRNA cases
   # Echoli
   echo $intaRNAPath/src/bin/IntaRNA -q "${dir}/${queryFastaB}" -t "${dir}/${targetFastaB}" --pred=S --mode=E --out "${dir}/IntaRNA_Simple_000913.csv" --outMode=C ${commandLineArguments}
   $intaRNAPath/src/bin/IntaRNA -q "${dir}/${queryFastaB}" -t "${dir}/${targetFastaB}" --pred=S --mode=E --out "${dir}/IntaRNA_Simple_000913.csv" --outMode=C ${commandLineArguments}
@@ -59,7 +59,5 @@ do
   # Salmonella
   echo $intaRNAPath/src/bin/IntaRNA -q "${dir}/${queryFastaSTM}" -t "${dir}/${targetFastaSTM}" --pred=S --mode=E --out "${dir}/IntaRNA_Simple_003197.csv" --outMode=C ${commandLineArguments}
   $intaRNAPath/src/bin/IntaRNA -q "${dir}/${queryFastaSTM}" -t "${dir}/${targetFastaSTM}" --pred=S --mode=E --out "${dir}/IntaRNA_Simple_003197.csv" --outMode=C ${commandLineArguments}
-
-  #
-
+ 
 done
