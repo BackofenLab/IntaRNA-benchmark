@@ -9,36 +9,42 @@ from subprocess import PIPE
 # help text
 usage= "Call with: python3 calls.py -a1 <argument1> -a2 ..." \
        "The following arguments are available:\n" \
-       "intaRNAPath (-i) : path where the intaRNA executable lies. Default: ../IntaRNA/src/bin . \n" \
-       "fastaPath (-f)   : location where the folders containing the fasta files lie. Default: ./predictions .\n" \
-       "arg (-a)         : command line arguments applied to the intaRNA query. \n" \
-       "help (-h)        : print this usage. \n"
+       "--ifile  (-i) : path where the intaRNA executable lies. Default: ../IntaRNA/src/bin . \n" \
+       "--ffile  (-f) : location where the folders containing the fasta files lie. Default: ./predictions .\n" \
+       "--arg    (-a) : command line arguments applied to the intaRNA query. \n" \
+       "--callID (-c) : mandatory callID used to identify call. \n" \
+       "--help   (-h) : print this usage. \n"
 
 def main(argv):
     intaRNAPath = os.path.join("..", "IntaRNA", "src", "bin",)
     fastaFilePath = os.path.join(".", "predictions")
     commandLineArguments = ""
-    outName = ""
+    callID = ""
 
     # commandline parsing
     try:
-        opts, args = getopt.getopt(argv,"hi:f:o:a:",["ifile=","ffile=","ofile","arg="])
+        opts, args = getopt.getopt(argv,"hi:f:a:c:",["ifile=","ffile=","arg=","callID="])
     except getopt.GetoptError:
         print("ERROR! Call <python3 calls.py -h> for help")
         sys.exit(2)
     for opt, arg in opts:
-        if opt == "-h":
+        if opt in ("-h", "--help"):
             print(usage)
             sys.exit()
         elif opt in ("-i", "--ifile"):
             intaRNAPath = arg
         elif opt in ("-f", "--ffile"):
             fastaFilePath = arg
-        elif opt in ("-o", "--ofile"):
-            outName = arg
         elif opt in ("-a", "--arg"):
             commandLineArguments = arg
+        elif opt in ("-c", "--callID"):
+            callID = arg
 
+    # Check whether a benchID was given
+    if callID == "":
+        print("No benchID was specified! Please specify a benchID using -b <name> or --benchID=<name>")
+        print("Program terminating!!!")
+        sys.exit()
 
     # get all relevant folder names
     directories = ([x[0] for x in os.walk(fastaFilePath)])[1:]
