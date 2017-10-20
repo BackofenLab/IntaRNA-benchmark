@@ -38,17 +38,19 @@ def main(argv):
 
     # Check whether a benchID was given
     if benchID == "":
-        print("No benchID was specified! Please specify a benchID using -b <name> or --benchID=<name>")
-        print("Program terminating!!!")
-        sys.exit()
+        sys.exit("No benchID was specified! Please specify a benchID using -b <name> or --benchID=<name>")
+
+    # check whether the benchID is valid (no file with that name exists)
+    outputPath = "."
+    if os.path.exists(os.path.join(outputPath, benchID + "_" + outputfile)):
+        sys.exit("A file for this benchID already exists! Exiting...")
 
     # read verified interactions
     if os.path.exists(verified_interactions) == True:
         with open(verified_interactions) as data:
             tempHybrid = [line.strip() for line in data]
     else:
-        print("Error: %s! File not found!" % (verified_interactions))
-        sys.exit(0)
+        sys.exit("Error: %s! File not found!" % (verified_interactions))
 
     # Get all directories with needed files and sort them
     dirs = ([x[0] for x in os.walk(directoryPath)])[1:]
@@ -78,49 +80,61 @@ def main(argv):
 
     # determine the rank of intaRNA given the confirmed hybrids
     for dir in dirs:
-        srna_name = dir.split(os.pathsep)[-1]
+        srna_name = dir.split(os.path.sep)[-1]
+
+        # STM file
+        stmFile = os.path.join(dir, benchID+"_"+srna_name+"_NC_003197.csv")
+        # b file
+        bFile = os.path.join(dir, benchID+"_"+srna_name+"_NC_000913.csv")
+        print(stmFile)
+        print(bFile)
+        # Check whether the requiered files for the benchmarking exists
+        if not os.path.exists(stmFile) or not os.path.exists(bFile):
+            print("CSV files not found for %s! Continuing with next srna!" % srna_name)
+            continue
 
         # Salmonella case
         if (srna_name,"STM") in confirmed_hybrids:
-            df = pd.read_csv(os.path.join(dir, srna_name+"_NC_003917.csv"), sep=";", header=0)
-            df = df.sort("E")
+            df = pd.read_csv(os.path.join(dir, benchID+"_"+srna_name+"_NC_003197.csv"), sep=";", header=0)
+            df = df.sort_values("E")
             for confirmed_hybrid in confirmed_hybrids[(srna_name, "STM")]:
                 target_ltag = confirmed_hybrid[0]
                 target_name = confirmed_hybrid[1]
 
-
                 try:
-                    # Uses first column, maybe take id1
-                    intaRNA_rank = list(df.ix[:,0]).index(target_ltag)
-                    # Remove header
-                    intaRNA_rank -= 1
+                    # Uses first column, maybe use id1 instead
+                    # Adding 1 because df.ix[:,0] ignores the header and list starts with 0. Adding 1 fixes it.
+                    intaRNA_rank = list(df.ix[:,0]).index(target_ltag) + 1
 
                     outputText += "%s,%s,%s,%s\n" % (srna_name, target_ltag, target_name, intaRNA_rank)
                 except ValueError:
                     print("Could not find %s in file." % (target_ltag))
 
         # Echoli case
-        elif (srna_name,"b") in confirmed_hybrids:
-            df = pd.read_csv(os.path.join(dir, srna_name+"_NC_000913.csv"), sep=";", header=0)
-            df = df.sort("E")
+        if (srna_name,"b") in confirmed_hybrids:
+            df = pd.read_csv(os.path.join(dir, benchID+"_"+srna_name+"_NC_000913.csv"), sep=";", header=0)
+            df = df.sort_values("E")
             for confirmed_hybrid in confirmed_hybrids[(srna_name, "b")]:
                 target_ltag = confirmed_hybrid[0]
                 target_name = confirmed_hybrid[1]
 
                 try:
-                    # Uses first column, maybe take id1
-                    intaRNA_rank = list(df.ix[:, 0]).index(target_ltag)
-                    # Remove header
-                    intaRNA_rank -= 1
+                    # Uses first column, maybe use id1 instead
+                    intaRNA_rank = list(df.ix[:, 0]).index(target_ltag) + 1
 
                     outputText += "%s,%s,%s,%s\n" % (srna_name, target_ltag, target_name, intaRNA_rank)
                 except ValueError:
                     print("Could not find %s in file." % (target_ltag))
 
-        # write csv file
-        csv_file = open(os.path.join(".", benchID + "_" + outputfile), "w")
-        csv_file.write(outputText)
-        csv_file.close()
+
+    # Check whether the outputFile is empty
+    if outputText == "srna_name;target_ltag;target_name;intarna_rank\n":
+        sys.exit("No reasonable output found!")
+
+    # write csv file
+    csv_file = open(os.path.join(outputPath, benchID + "_" + outputfile), "w")
+    csv_file.write(outputText)
+    csv_file.close()
 
 if __name__ == "__main__":
    main(sys.argv[1:])
