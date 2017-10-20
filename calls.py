@@ -60,7 +60,13 @@ def main(argv):
     targetFastaB = "NC_000913_upfromstartpos_200_down_100.fa"
     targetFastaSTM = "NC_003197_upfromstartpos_200_down_100.fa"
 
-
+    # Logging files
+    callLogFilePath = os.path.join(".", callID + "_calls.txt")
+    timeLogFilePath = os.path.join(".", callID + "_runTimes.csv")
+    # Variables to create the timeLog table
+    header = "callID;Organism"
+    stmLine = "%s;Salmonella" % callID
+    bLine = "%s;E.coli" % callID
     for dir in directories:
         # declaring file names of query fasta files
         srna_name = dir.split(os.path.sep)[-1]
@@ -72,6 +78,10 @@ def main(argv):
         outSTM = os.path.join(dir, callID + "_" + srna_name + "_NC_003197.csv")
         outB = os.path.join(dir, callID + "_" + srna_name + "_NC_000913.csv")
 
+        # Adding column
+        header += ";%s" % srna_name
+        stmLine += ";"
+        bLine += ";"
         # check whether the outputfiles already exist
         if not os.path.exists(outSTM):
             if os.path.exists(queryFastaSTM):
@@ -83,10 +93,12 @@ def main(argv):
                                                + commandLineArguments
                 print(call)
                 # record time of this call
-                startCallb = time.time()
+                startCallSTM = time.time()
                 with Popen(call, shell=True, stdout=PIPE) as process:
                     print(process.stdout.read())
-                endCallb = time.time()
+                endCallSTM = time.time()
+                timeCallSTM = endCallSTM - startCallSTM
+                stmLine += "%s" % timeCallSTM
             else:
                 print("%s missing!" % queryFastaSTM)
         else:
@@ -101,14 +113,21 @@ def main(argv):
                                                + commandLineArguments
                 print(call)
                 # record time of this call
-                startCallSTM = time.time()
+                startCallb = time.time()
                 with Popen(call, shell=True, stdout=PIPE) as process:
                     print(process.stdout.read())
-                endCallSTM = time.time()
+                endCallb = time.time()
+                timeCallb = endCallb - startCallb
+                bLine +="%s" % timeCallb
             else:
                 print("%s missing!" % queryFastaB)
         else:
             print("%s already exists!" % (outB.split(os.path.sep)[-1]))
+
+    # Write timeLogFile
+    csv_file = open(), "w")
+    csv_file.write(outputText)
+    csv_file.close()
 
     # Start benchmarking for this callID
     callBenchmark = "python3 benchmark.py -b %s" % (callID)
