@@ -41,7 +41,7 @@ def main(argv):
         sys.exit("No benchID was specified! Please specify a benchID using -b <name> or --benchID=<name>")
 
     # check whether the benchID is valid (no file with that name exists)
-    outputPath = "."
+    outputPath = os.path(".","benchmarks")
     if os.path.exists(os.path.join(outputPath, benchID + "_" + outputfile)):
         sys.exit("A file for this benchID already exists! Exiting...")
 
@@ -56,8 +56,8 @@ def main(argv):
     dirs = ([x[0] for x in os.walk(directoryPath)])[1:]
     dirs.sort()
 
+    # Create a dictionary for better accessibility of srna data
     confirmed_hybrids = dict()
-
     for line in tempHybrid:
         spl = line.split(";")
 

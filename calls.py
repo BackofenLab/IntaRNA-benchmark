@@ -6,6 +6,14 @@ import time
 from subprocess import Popen
 from subprocess import PIPE
 
+########################################################################################################################
+#                                                                                                                      #
+#            This script calls intaRNA with custom parameters on a set of sRNA queries and mRNA targets.               #
+#            The script requires a callID to identify the call and to allow parallel runs of the script.               #
+#                   The benchmark.py script is called after building the result files.                                 #
+#                                                                                                                      #
+########################################################################################################################
+
 # help text
 usage= "Call with: python3 calls.py -a1 <argument1> -a2 ..." \
        "The following arguments are available:\n" \
@@ -16,7 +24,7 @@ usage= "Call with: python3 calls.py -a1 <argument1> -a2 ..." \
        "--help   (-h) : print this usage. \n"
 
 def main(argv):
-    intaRNAPath = os.path.join("..", "IntaRNA", "src", "bin",)
+    intaRNAPath = os.path.join("..", "IntaRNA", "src", "bin","")
     fastaFilePath = os.path.join(".", "predictions")
     commandLineArguments = ""
     callID = ""
@@ -40,11 +48,9 @@ def main(argv):
         elif opt in ("-c", "--callID"):
             callID = arg
 
-    # Check whether a benchID was given
+    # Check whether a callID was given
     if callID == "":
-        print("No benchID was specified! Please specify a benchID using -b <name> or --benchID=<name>")
-        print("Program terminating!!!")
-        sys.exit()
+        sys.exit("No callID was specified! Please specify a callID using -c <name> or --callID=<name>")
 
     # get all relevant folder names
     directories = ([x[0] for x in os.walk(fastaFilePath)])[1:]
@@ -58,36 +64,56 @@ def main(argv):
     for dir in directories:
         # declaring file names of query fasta files
         srna_name = dir.split(os.path.sep)[-1]
-        queryFastaB = srna_name + "_NC_000913.fasta"
-        queryFastaSTM = srna_name + "_NC_003197.fasta"
+        queryFastaB = os.path.join(dir, srna_name + "_NC_000913.fasta")
+        queryFastaSTM = os.path.join(dir, srna_name + "_NC_003197.fasta")
 
 
-        # IntaRNA call
-        # Salmonella
-        call = intaRNAPath + "IntaRNA" + " -q " + os.path.join(dir, queryFastaSTM) \
-               + " -t " + os.path.join(fastaFilePath, targetFastaSTM) \
-               + " --out " + os.path.join(dir, srna_name+"_NC_003197.csv") \
-               + " --outMode=C " + commandLineArguments
-        print(call)
-        # record time of this call
-        startCallb = time.time()
-        with Popen(call, shell=True, stdout=PIPE) as process:
-            print(process.stdout.read())
-        endCallb = time.time()
+        # outputFile paths
+        outSTM = os.path.join(dir, callID + "_" + srna_name + "_NC_003197.csv")
+        outB = os.path.join(dir, callID + "_" + srna_name + "_NC_000913.csv")
 
-        # Echoli
-        call = intaRNAPath + "IntaRNA" + " -q " + os.path.join(dir, queryFastaB) \
-                                       + " -t " + os.path.join(fastaFilePath, targetFastaB) \
-                                       + " --out " + os.path.join(dir,srna_name+"_NC_000913.csv") \
-                                       + " --outMode=C " + commandLineArguments
-        print(call)
-        # record time of this call
-        startCallSTM = time.time()
-        with Popen(call, shell=True, stdout=PIPE) as process:
-            print(process.stdout.read())
-        endCallSTM = time.time()
+        # check whether the outputfiles already exist
+        if not os.path.exists(outSTM):
+            if os.path.exists(queryFastaSTM):
+                # IntaRNA call
+                # Salmonella
+                call = intaRNAPath + "IntaRNA" + " -q " + queryFastaSTM \
+                                               + " -t " + os.path.join(fastaFilePath, targetFastaSTM) \
+                                               + " --out " + outSTM + " --outMode=C "  \
+                                               + commandLineArguments
+                print(call)
+                # record time of this call
+                startCallb = time.time()
+                with Popen(call, shell=True, stdout=PIPE) as process:
+                    print(process.stdout.read())
+                endCallb = time.time()
+            else:
+                print("%s missing!" % queryFastaSTM)
+        else:
+            print("%s already exists!" % (outSTM.split(os.path.sep)[-1]))
 
+        if not os.path.exists(outB):
+            if os.path.exists(queryFastaB):
+                # Echoli
+                call = intaRNAPath + "IntaRNA" + " -q " + queryFastaB \
+                                               + " -t " + os.path.join(fastaFilePath, targetFastaB) \
+                                               + " --out " + outB + " --outMode=C " \
+                                               + commandLineArguments
+                print(call)
+                # record time of this call
+                startCallSTM = time.time()
+                with Popen(call, shell=True, stdout=PIPE) as process:
+                    print(process.stdout.read())
+                endCallSTM = time.time()
+            else:
+                print("%s missing!" % queryFastaB)
+        else:
+            print("%s already exists!" % (outB.split(os.path.sep)[-1]))
 
+    # Start benchmarking for this callID
+    callBenchmark = "python3 benchmark.py -b %s" % (callID)
+    with Popen(callBenchmark, shell=True, stdout=PIPE) as process:
+        print(process.stdout.read())
 
 if __name__ == "__main__":
    main(sys.argv[1:])
