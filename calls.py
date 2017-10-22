@@ -61,8 +61,11 @@ def main(argv):
     targetFastaSTM = "NC_003197_upfromstartpos_200_down_100.fa"
 
     # Logging files
-    callLogFilePath = os.path.join(".", callID + "_calls.txt")
-    timeLogFilePath = os.path.join(".", callID + "_runTimes.csv")
+    callLogFilePath = os.path.join(".", "logs", callID + "_calls.txt")
+    timeLogFilePath = os.path.join(".", "benchmarks", callID + "_runTimes.csv")
+
+    # open file
+    callLogFile = open(callLogFilePath, "w")
     # Variables to create the timeLog table
     header = "callID;Organism"
     stmLine = "%s;Salmonella" % callID
@@ -72,7 +75,6 @@ def main(argv):
         srna_name = dir.split(os.path.sep)[-1]
         queryFastaB = os.path.join(dir, srna_name + "_NC_000913.fasta")
         queryFastaSTM = os.path.join(dir, srna_name + "_NC_003197.fasta")
-
 
         # outputFile paths
         outSTM = os.path.join(dir, callID + "_" + srna_name + "_NC_003197.csv")
@@ -92,6 +94,7 @@ def main(argv):
                                                + " --out " + outSTM + " --outMode=C "  \
                                                + commandLineArguments
                 print(call)
+                print("%s\n" % call, file=callLogFile)
                 # record time of this call
                 startCallSTM = time.time()
                 with Popen(call, shell=True, stdout=PIPE) as process:
@@ -112,6 +115,7 @@ def main(argv):
                                                + " --out " + outB + " --outMode=C " \
                                                + commandLineArguments
                 print(call)
+                print("%s\n" % call, file=callLogFile)
                 # record time of this call
                 startCallb = time.time()
                 with Popen(call, shell=True, stdout=PIPE) as process:
@@ -124,9 +128,12 @@ def main(argv):
         else:
             print("%s already exists!" % (outB.split(os.path.sep)[-1]))
 
+    # close files
+    callLogFile.close()
+
     # Write timeLogFile
-    csv_file = open(), "w")
-    csv_file.write(outputText)
+    csv_file = open(timeLogFilePath, "w")
+    csv_file.write("%s\n%s\n%s\n" % (header, stmLine, bLine))
     csv_file.close()
 
     # Start benchmarking for this callID
