@@ -52,6 +52,7 @@ def main(argv):
     else:
         sys.exit("Error: %s! File not found!" % (verified_interactions))
 
+    print("Starting benchmarking: %s" % benchID)
     # Get all directories with needed files and sort them
     dirs = ([x[0] for x in os.walk(directoryPath)])[1:]
     dirs.sort()
@@ -86,8 +87,7 @@ def main(argv):
         stmFile = os.path.join(dir, benchID+"_"+srna_name+"_NC_003197.csv")
         # b file
         bFile = os.path.join(dir, benchID+"_"+srna_name+"_NC_000913.csv")
-        print(stmFile)
-        print(bFile)
+
         # Check whether the requiered files for the benchmarking exists
         if not os.path.exists(stmFile) or not os.path.exists(bFile):
             print("CSV files not found for %s! Continuing with next srna!" % srna_name)
@@ -135,6 +135,8 @@ def main(argv):
     csv_file = open(os.path.join(outputPath, benchID + "_" + outputfile), "w")
     csv_file.write(outputText)
     csv_file.close()
+
+    print("Finished benchmarking: %s" % benchID)
 
 if __name__ == "__main__":
    main(sys.argv[1:])

@@ -1,8 +1,7 @@
 #!/usr/bin/python
 # Author: Rick Gelhausen
 import sys, getopt
-import os.path
-import time
+import os
 from subprocess import Popen
 from subprocess import PIPE
 
@@ -22,6 +21,16 @@ usage= "Call with: python3 calls.py -a1 <argument1> -a2 ..." \
        "--arg    (-a) : command line arguments applied to the intaRNA query. \n" \
        "--callID (-c) : mandatory callID used to identify call. \n" \
        "--help   (-h) : print this usage. \n"
+
+
+# Run a subprocess with the given call
+def runSubprocess(call_):
+    with Popen(call_, shell=True, stdout=PIPE) as process:
+        print(str(process.stdout.read(),"utf-8"))
+        ru = os.wait4(process.pid, 0)[2]
+        # Return time and memory usage
+    return ru.ru_utime, ru.ru_maxrss
+
 
 def main(argv):
     intaRNAPath = os.path.join("..", "IntaRNA", "src", "bin","")
@@ -63,13 +72,17 @@ def main(argv):
     # Logging files
     callLogFilePath = os.path.join(".", "logs", callID + "_calls.txt")
     timeLogFilePath = os.path.join(".", "benchmarks", callID + "_runTimes.csv")
+    memoryLogFilePath = os.path.join(".", "benchmarks", callID + "_MaxMemoryUsage.csv")
 
     # open file
     callLogFile = open(callLogFilePath, "w")
+
     # Variables to create the timeLog table
     header = "callID;Organism"
-    stmLine = "%s;Salmonella" % callID
-    bLine = "%s;E.coli" % callID
+    stmTimeLine = "%s;Salmonella" % callID
+    bTimeLine = "%s;E.coli" % callID
+    stmMemoryLine = "%s;Salmonella" % callID
+    bMemoryLine = "%s;E.coli" % callID
     for dir in directories:
         # declaring file names of query fasta files
         srna_name = dir.split(os.path.sep)[-1]
@@ -82,8 +95,10 @@ def main(argv):
 
         # Adding column
         header += ";%s" % srna_name
-        stmLine += ";"
-        bLine += ";"
+        stmTimeLine += ";"
+        bTimeLine += ";"
+        stmMemoryLine += ";"
+        bMemoryLine += ";"
         # check whether the outputfiles already exist
         if not os.path.exists(outSTM):
             if os.path.exists(queryFastaSTM):
@@ -95,13 +110,11 @@ def main(argv):
                                                + commandLineArguments
                 print(call)
                 print("%s\n" % call, file=callLogFile)
-                # record time of this call
-                startCallSTM = time.time()
-                with Popen(call, shell=True, stdout=PIPE) as process:
-                    print(str(process.stdout.read(),"utf-8"))
-                endCallSTM = time.time()
-                timeCallSTM = endCallSTM - startCallSTM
-                stmLine += "%.2f" % timeCallSTM
+                # record time in seconds and memory in KB of this call
+                timeCallSTM, maxMemorySTM = runSubprocess(call)
+                stmTimeLine += "%.2f" % timeCallSTM
+                # Convert to megabyte (MB)
+                stmMemoryLine += "%.2f" % (float(maxMemorySTM) / 1000)
             else:
                 print("%s missing!" % queryFastaSTM)
         else:
@@ -116,13 +129,11 @@ def main(argv):
                                                + commandLineArguments
                 print(call)
                 print("%s\n" % call, file=callLogFile)
-                # record time of this call
-                startCallb = time.time()
-                with Popen(call, shell=True, stdout=PIPE) as process:
-                    print(str(process.stdout.read(),"utf-8"))
-                endCallb = time.time()
-                timeCallb = endCallb - startCallb
-                bLine +="%.2f" % timeCallb
+                # record time and memory of this call
+                timeCallb, maxMemoryb = runSubprocess(call)
+                bTimeLine +="%.2f" % timeCallb
+                # Convert to megabyte (MB)
+                bMemoryLine +="%.2f" % (float(maxMemoryb) / 1000)
             else:
                 print("%s missing!" % queryFastaB)
         else:
@@ -133,7 +144,12 @@ def main(argv):
 
     # Write timeLogFile
     csv_file = open(timeLogFilePath, "w")
-    csv_file.write("%s\n%s\n%s\n" % (header, stmLine, bLine))
+    csv_file.write("%s\n%s\n%s\n" % (header, stmTimeLine, bTimeLine))
+    csv_file.close()
+
+    # Write memoryLogFile
+    csv_file = open(memoryLogFilePath, "w")
+    csv_file.write("%s\n%s\n%s\n" % (header, stmMemoryLine, bMemoryLine))
     csv_file.close()
 
     # Start benchmarking for this callID
