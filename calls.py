@@ -98,10 +98,10 @@ def main(argv):
                 # record time of this call
                 startCallSTM = time.time()
                 with Popen(call, shell=True, stdout=PIPE) as process:
-                    print(process.stdout.read())
+                    print(str(process.stdout.read(),"utf-8"))
                 endCallSTM = time.time()
                 timeCallSTM = endCallSTM - startCallSTM
-                stmLine += "%s" % timeCallSTM
+                stmLine += "%.2f" % timeCallSTM
             else:
                 print("%s missing!" % queryFastaSTM)
         else:
@@ -119,10 +119,10 @@ def main(argv):
                 # record time of this call
                 startCallb = time.time()
                 with Popen(call, shell=True, stdout=PIPE) as process:
-                    print(process.stdout.read())
+                    print(str(process.stdout.read(),"utf-8"))
                 endCallb = time.time()
                 timeCallb = endCallb - startCallb
-                bLine +="%s" % timeCallb
+                bLine +="%.2f" % timeCallb
             else:
                 print("%s missing!" % queryFastaB)
         else:
@@ -139,7 +139,7 @@ def main(argv):
     # Start benchmarking for this callID
     callBenchmark = "python3 benchmark.py -b %s" % (callID)
     with Popen(callBenchmark, shell=True, stdout=PIPE) as process:
-        print(process.stdout.read())
+        print(str(process.stdout.read(), "utf-8"))
 
 if __name__ == "__main__":
    main(sys.argv[1:])

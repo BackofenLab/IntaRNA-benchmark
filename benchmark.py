@@ -41,7 +41,7 @@ def main(argv):
         sys.exit("No benchID was specified! Please specify a benchID using -b <name> or --benchID=<name>")
 
     # check whether the benchID is valid (no file with that name exists)
-    outputPath = os.path(".","benchmarks")
+    outputPath = os.path.join(".","benchmarks")
     if os.path.exists(os.path.join(outputPath, benchID + "_" + outputfile)):
         sys.exit("A file for this benchID already exists! Exiting...")
 
