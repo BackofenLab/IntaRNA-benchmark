@@ -99,8 +99,8 @@ def main(argv):
         bTimeLine += ";"
         stmMemoryLine += ";"
         bMemoryLine += ";"
-        # check whether the outputfiles already exist
-        if not os.path.exists(outSTM):
+        # check whether the outputfiles already exist (overwrite empty files)
+        if not os.path.exists(outSTM) or os.stat(outSTM).st_size == 0:
             if os.path.exists(queryFastaSTM):
                 # IntaRNA call
                 # Salmonella
@@ -120,7 +120,8 @@ def main(argv):
         else:
             print("%s already exists!" % (outSTM.split(os.path.sep)[-1]))
 
-        if not os.path.exists(outB):
+        # check whether the outputfiles already exist (overwrite empty files)
+        if not os.path.exists(outB) or os.stat(outB).st_size == 0:
             if os.path.exists(queryFastaB):
                 # Echoli
                 call = intaRNAPath + "IntaRNA" + " -q " + queryFastaB \

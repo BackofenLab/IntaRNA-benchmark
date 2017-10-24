@@ -50,8 +50,8 @@ def main(argv):
     # read all files
     allFiles = []
     allFiles += glob.glob(os.path.join(fastaFilePath,"**","*.csv"))
-    allFiles += glob.glob(os.path.join(benchmarkFilePath,"*"))
-    allFiles += glob.glob(os.path.join(logFilePath,"*"))
+    allFiles += glob.glob(os.path.join(benchmarkFilePath,"*.csv"))
+    allFiles += glob.glob(os.path.join(logFilePath,"*.txt"))
 
     # clear all create files
     if callID == "":
@@ -74,7 +74,7 @@ def main(argv):
         filesToDelete = []
         for c in callIDs:
             for file in allFiles:
-                if c in file.split("/")[-1].split("_")[0]:
+                if c == file.split(os.path.sep)[-1].split("_")[0]:
                     print("File: %s flagged for delete!" % (file))
                     filesToDelete.append(file)
 

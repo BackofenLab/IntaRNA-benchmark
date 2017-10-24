@@ -77,7 +77,7 @@ def main(argv):
 
     # TODO: FIX this to always point at the right (b or STM) directory by calling benchmark.py in calls.py
 
-    outputText= "srna_name;target_ltag;target_name;intarna_rank\n"
+    outputText= "srna_name;target_ltag;target_name;%s_intarna_rank\n" % benchID
 
     # determine the rank of intaRNA given the confirmed hybrids
     for dir in dirs:
