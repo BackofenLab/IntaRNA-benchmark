@@ -6,6 +6,14 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
+
+########################################################################################################################
+#                                                                                                                      #
+#                                   Plot contents of a given benchmark.csv file                                        #
+#                                                                                                                      #
+#                                                                                                                      #
+########################################################################################################################
+
 # help text
 usage = "Call with: python3 plot_performance.py -a1 <argument1> -a2 ..." \
         "The following arguments are available:\n" \

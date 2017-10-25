@@ -73,8 +73,9 @@ def main(argv):
 
         filesToDelete = []
         for c in callIDs:
+            _inCallID = c.count("_")
             for file in allFiles:
-                if c == file.split(os.path.sep)[-1].split("_")[0]:
+                if c == "_".join(file.split(os.path.sep)[-1].split("_")[:_inCallID+1]):
                     print("File: %s flagged for delete!" % (file))
                     filesToDelete.append(file)
 
