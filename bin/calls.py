@@ -138,7 +138,7 @@ def main(argv):
                 print("%s\n" % call, file=open(callLogFilePath,"a"))
 
                 # Outputfilepath
-                out = os.path.join(outputPath, callID, srna_name + "_" + target_name + "_benchmark.csv")
+                out = os.path.join(outputPath, callID, srna_name + "_" + target_name + ".csv")
 
                 # record time in seconds and memory in KB of this call
                 timeCall, maxMemory = runSubprocess(call, out)
