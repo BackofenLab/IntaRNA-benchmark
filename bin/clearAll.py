@@ -3,6 +3,7 @@
 import sys, getopt
 import os
 import glob
+import shutil
 
 ########################################################################################################################
 #                                                                                                                      #
@@ -15,21 +16,19 @@ import glob
 usage= "Call with: python3 calls.py -a1 <argument1> -a2 ..." \
        "The following arguments are available:\n" \
        "--ffile  (-f) : location where the folders containing the fasta files lie. Default: ./predictions .\n" \
-       "--callID (-c) : Allows clearing only certain callIDs. Specify multiple callIDs with callID1|callID2|... \n" \
+       "--callID (-c) : Allows clearing only certain callIDs. Specify multiple callIDs with callID1/callID2/... \n" \
        "--help   (-h) : print this usage. \n"
 
-def deleteFiles(filesToDeleteList):
-    for file in filesToDeleteList:
+def deleteFolders(foldersToDeleteList):
+    for folder in foldersToDeleteList:
         try:
-            if os.path.isfile(file):
-                os.unlink(file)
+            if os.path.isdir(folder):
+                shutil.rmtree(folder)
         except Exception as e:
             print(e)
 
 def main(argv):
-    fastaFilePath = os.path.join(".", "predictions")
-    benchmarkFilePath = os.path.join(".", "benchmarks")
-    logFilePath = os.path.join(".", "logs")
+    inFilePath = os.path.join("..", "output")
     callID = ""
 
     # commandline parsing
@@ -43,46 +42,42 @@ def main(argv):
             print(usage)
             sys.exit()
         elif opt in ("-f", "--ffile"):
-            fastaFilePath = arg
+            inFilePath = arg
         elif opt in ("-c", "--callID"):
             callID = arg
 
     # read all files
-    allFiles = []
-    allFiles += glob.glob(os.path.join(fastaFilePath,"**","*.csv"))
-    allFiles += glob.glob(os.path.join(benchmarkFilePath,"*.csv"))
-    allFiles += glob.glob(os.path.join(logFilePath,"*.txt"))
+    allFolders = glob.glob(os.path.join(inFilePath, "*"))
 
-    # clear all create files
+    # clear all created files
     if callID == "":
-        for file in allFiles:
-            print("File: %s flagged for delete!" % (file))
+        for benchFolder in allFolders:
+            print("File: %s flagged for delete!" % (benchFolder))
 
-        sys.stdout.write("Do you want to delete all files? [y/n]")
+        sys.stdout.write("Do you want to delete all folders? [y/n]")
         choice = input().lower()
         if choice in ["y","yes"]:
-            deleteFiles(allFiles)
+            deleteFolders(allFolders)
         else:
             sys.exit("Aborting!!!")
     else:
         callIDs = []
-        if "|" in callID:
-            callIDs = callID.split("|")
+        if "/" in callID:
+            callIDs = callID.split("/")
         else:
             callIDs.append(callID)
 
-        filesToDelete = []
+        foldersToDelete = []
         for c in callIDs:
-            _inCallID = c.count("_")
-            for file in allFiles:
-                if c == "_".join(file.split(os.path.sep)[-1].split("_")[:_inCallID+1]):
-                    print("File: %s flagged for delete!" % (file))
-                    filesToDelete.append(file)
+            for folder in allFolders:
+                if c == folder.split(os.path.sep)[-1]:
+                    print("Folder: %s flagged for delete!" % (folder))
+                    foldersToDelete.append(folder)
 
-        sys.stdout.write("Do you want to delete the specified files? [y/n]")
+        sys.stdout.write("Do you want to delete the specified folders? [y/n]")
         choice = input().lower()
         if choice in ["y", "yes"]:
-            deleteFiles(filesToDelete)
+            deleteFolders(foldersToDelete)
         else:
             sys.exit("Aborting!!!")
 

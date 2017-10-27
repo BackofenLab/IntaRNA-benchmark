@@ -117,9 +117,9 @@ def main(argv):
         for target_file in target_files:
             target_name = target_file.split(os.path.sep)[-1].split(".")[0]
             # Variables to create the timeLog table
-            header = "target_name;Organism"
-            timeLine = "%s;%s" % (target_name, organism)
-            memoryLine = "%s;%s" % (target_name, organism)
+            header = "callID;target_name;Organism"
+            timeLine = "%s;%s;%s" % (callID, target_name, organism)
+            memoryLine = "%s;%s;%s" % (callID, target_name, organism)
 
             for srna_file in srna_files:
                 srna_name = srna_file.split(os.path.sep)[-1].split("_")[0]

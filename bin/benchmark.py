@@ -108,7 +108,7 @@ def main(argv):
                             # Adding 1 because df.ix[:,0] ignores the header and list starts with 0. Adding 1 fixes it.
                             intaRNA_rank = list(df.ix[:,0]).index(target_ltag) + 1
 
-                            outputText += "%s,%s,%s,%s\n" % (srna_name, target_ltag, target_name, intaRNA_rank)
+                            outputText += "%s;%s;%s;%s\n" % (srna_name, target_ltag, target_name, intaRNA_rank)
                         except ValueError:
                             continue
 
