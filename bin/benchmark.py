@@ -77,33 +77,40 @@ def main(argv):
     srna_files = [x for x in glob.glob(os.path.join(directoryPath, benchID, "*.csv")) if x.split(os.path.sep)[-1].split("_")[0] in srnaList]
     srna_files.sort()
 
-
     # Check whether the needed files for the benchmarking exist
     if srna_files == []:
-        sys.exit("Error!!! No files found for benchmarking ID %s" % benchID )
+        sys.exit("Error!!! No files found for benchmarking ID %s" % benchID)
+
+    # Create a dictionary from the srna_files for better access
+    srnaDict = dict()
+    for srna in srnaList:
+        if srna in srnaDict:
+            srnaDict[srna].insert([x for x in srna_files if srna in x])
+        else:
+            srnaDict[srna] = [x for x in srna_files if srna in x]
 
     outputText= "srna_name;target_ltag;target_name;%s_intarna_rank\n" % benchID
 
     # determine the rank of intaRNA given the confirmed hybrids
-    for srna_file in srna_files:  #TODO PROBABLY BETTER TO TAKE SRNALIST
-        srna_name = srna_file.split(os.path.sep)[-1].split("_")[0]
-
+    for srna_name in srnaList:
         for organism in organisms:
             if (srna_name, organism) in confirmed_hybrids:
-                df = pd.read_csv(os.path.join(dir, benchID+"_"+srna_name+"_NC_003197.csv"), sep=";", header=0)
-                df = df.sort_values("E")
-                for confirmed_hybrid in confirmed_hybrids[(srna_name, "STM")]:
-                    target_ltag = confirmed_hybrid[0]
-                    target_name = confirmed_hybrid[1]
+                for confirmed_hybrid in confirmed_hybrids[(srna_name, organism)]:
+                    for file in srnaDict[srna_name]:
+                        df = pd.read_csv(file, sep=";", header=0)
+                        df = df.sort_values("E")
 
-                    try:
-                        # Uses first column, maybe use id1 instead
-                        # Adding 1 because df.ix[:,0] ignores the header and list starts with 0. Adding 1 fixes it.
-                        intaRNA_rank = list(df.ix[:,0]).index(target_ltag) + 1
+                        target_ltag = confirmed_hybrid[0]
+                        target_name = confirmed_hybrid[1]
 
-                        outputText += "%s,%s,%s,%s\n" % (srna_name, target_ltag, target_name, intaRNA_rank)
-                    except ValueError:
-                        print("Could not find %s in file." % (target_ltag))
+                        try:
+                            # Uses first column, maybe use id1 instead
+                            # Adding 1 because df.ix[:,0] ignores the header and list starts with 0. Adding 1 fixes it.
+                            intaRNA_rank = list(df.ix[:,0]).index(target_ltag) + 1
+
+                            outputText += "%s,%s,%s,%s\n" % (srna_name, target_ltag, target_name, intaRNA_rank)
+                        except ValueError:
+                            continue
 
 
 
@@ -112,7 +119,7 @@ def main(argv):
         sys.exit("No reasonable output found!")
 
     # write csv file
-    csv_file = open(os.path.join(outputPath, benchID + "_" + outputfile), "w")
+    csv_file = open(os.path.join(outputPath), "w")
     csv_file.write(outputText)
     csv_file.close()
 
