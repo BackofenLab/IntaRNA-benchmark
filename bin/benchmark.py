@@ -8,9 +8,9 @@ import glob
 # help text
 usage= "Call with: python3 benchmark.py -a1 <argument1> -a2 ... \n" \
        "The following arguments are available: \n" \
-       "--ifile   (-i) : path of the file containing the verified interactions lies. Default: verified_interactions.csv . \n" \
-       "--ofile   (-o) : path of the benchmark outputfile. Default: ./<benchID>_benchmark.csv .\n" \
-       "--pdirs   (-p) : path to directory containing srna folders. Default: ./predictions \n" \
+       "--ifile   (-i) : path of the file containing the verified interactions. Default: ../verified_interactions.csv . \n" \
+       "--ofile   (-o) : path of the benchmark outputfile. Default: ./benchmark.csv .\n" \
+       "--pdirs   (-p) : path to directory containing the output of the calls script. Default: ../output \n" \
        "--benchID (-b) : mandatory benchID used to identify benchmarking. \n" \
        "--help    (-h) : print usage. \n"
 

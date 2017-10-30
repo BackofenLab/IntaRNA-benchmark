@@ -18,8 +18,8 @@ from subprocess import PIPE
 usage= "Call with: python3 calls.py -a1 <argument1> -a2 ..." \
        "The following arguments are available:\n" \
        "--ifile  (-i) : path where the intaRNA executable lies. Default: ../IntaRNA/src/bin . \n" \
-       "--ffile  (-f) : location where the folders containing the fasta files lie. Default: ./input .\n" \
-       "--ofile  (-o) : output folder\n" \
+       "--ffile  (-f) : input folder containing the faster files required. Default: ./input .\n" \
+       "--ofile  (-o) : output folder.\n" \
        "--arg    (-a) : command line arguments applied to the intaRNA query. \n" \
        "--callID (-c) : mandatory callID used to identify call. \n" \
        "--help   (-h) : print this usage. \n"
@@ -39,7 +39,7 @@ def runSubprocess(call_, outputPath):
 def main(argv):
     intaRNAPath = os.path.join("..", "..", "IntaRNA", "src", "bin", "")
     outputPath = os.path.join("..", "output")
-    fastaFilePath = os.path.join("..", "input")
+    inputPath = os.path.join("..", "input")
     commandLineArguments = ""
     callID = ""
 
@@ -58,7 +58,7 @@ def main(argv):
         elif opt in ("-o", "--ofile"):
             outputPath = arg
         elif opt in ("-f", "--ffile"):
-            fastaFilePath = arg
+            inputPath = arg
         elif opt in ("-a", "--arg"):
             commandLineArguments = arg
         elif opt in ("-c", "--callID"):
@@ -79,7 +79,7 @@ def main(argv):
         sys.exit("Error!!! A directory for callID %s already exists!" % callID)
 
     # Organisms
-    organisms = [x.split(os.path.sep)[-1] for x in glob.glob(os.path.join(fastaFilePath,"*"))]
+    organisms = [x.split(os.path.sep)[-1] for x in glob.glob(os.path.join(inputPath,"*")) if os.path.isdir(x)]
     if organisms == []:
         sys.exit("Input folder is empty!")
 
@@ -90,9 +90,9 @@ def main(argv):
 
     for organism in organisms:
         # check if query and target folder exist
-        if not os.path.exists(os.path.join(fastaFilePath, organism, "query")):
+        if not os.path.exists(os.path.join(inputPath, organism, "query")):
             sys.exit("Error!!! Could not find query path for %s!" % organism)
-        if not os.path.exists(os.path.join(fastaFilePath, organism, "target")):
+        if not os.path.exists(os.path.join(inputPath, organism, "target")):
             sys.exit("Error!!! Could not find target path for %s!" % organism)
 
         fastaFileEndings = [".fasta", ".fa"]
@@ -100,8 +100,8 @@ def main(argv):
         srna_files = []
         target_files = []
         for ending in fastaFileEndings:
-            srna_files.extend(glob.glob(os.path.join(fastaFilePath, organism, "query", "*" + ending)))
-            target_files.extend(glob.glob(os.path.join(fastaFilePath, organism, "target", "*" + ending)))
+            srna_files.extend(glob.glob(os.path.join(inputPath, organism, "query", "*" + ending)))
+            target_files.extend(glob.glob(os.path.join(inputPath, organism, "target", "*" + ending)))
 
         # Sort input
         srna_files.sort()

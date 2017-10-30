@@ -15,7 +15,7 @@ import shutil
 # help text
 usage= "Call with: python3 calls.py -a1 <argument1> -a2 ..." \
        "The following arguments are available:\n" \
-       "--ffile  (-f) : location where the folders containing the fasta files lie. Default: ./predictions .\n" \
+       "--ffile  (-f) : location of the output folder. Default: ../output/ .\n" \
        "--callID (-c) : Allows clearing only certain callIDs. Specify multiple callIDs with callID1/callID2/... \n" \
        "--help   (-h) : print this usage. \n"
 
