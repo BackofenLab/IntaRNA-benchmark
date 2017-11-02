@@ -18,7 +18,7 @@ usage = "Call with: python3 mergeBenchmarks.py -a1 <argument1> -a2 ... \n" \
         "The following arguments are available: \n" \
         "--ofile   (-o) : path and name of outputfile. MANDATORY. .\n" \
         "--bdirs   (-d) : path to the benchmark folder. Default: ./output \n" \
-        "--benchID (-b) : benchIDs to be merged. benchID1/benchID2|... \n" \
+        "--benchID (-b) : benchIDs to be merged. benchID1/benchID2/... \n" \
         "--all     (-a) : if parameter is set no benchID needs to be specified. Every ID is used automatically.\n" \
         "--help    (-h) : print usage. \n"
 
