@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 usage = "Call with: python3 plot_performance.py -a1 <argument1> -a2 ..." \
         "The following arguments are available:\n" \
         "--ifile  (-i) : Benchmark file to be used for plotting. MANDATORY . \n" \
-        "--ofile  (-o) : outputFilePath. Default: IntaRNA2_benchmark.pdf \n" \
+        "--ofile  (-o) : outputFilePath. Default: ../output/intaRNA2_benchmark.pdf \n" \
         "--sep    (-s) : specify the separator used by the benchmark file. Default ';'\n" \
         "--end    (-e) : endpoint of the run. Default: 200 \n" \
         "--xlim   (-x) : specify a xlim for the output. x_start/x_end .\n" \
@@ -28,7 +28,7 @@ usage = "Call with: python3 plot_performance.py -a1 <argument1> -a2 ..." \
 
 def main(argv):
     benchmarkFile = ""
-    outFile = "intaRNA2_benchmark.pdf"
+    outFile = os.path.join("..", "output", "intaRNA2_benchmark.pdf")
     separator = ";"
     end = 200
     xlim = ""

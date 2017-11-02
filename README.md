@@ -12,7 +12,7 @@ The bin folder holds various different scripts used in the benchmarking process.
 
 A required file is the verified_interactions.csv. The file contains interactions that were verified experimentally.
 
-### Theory
+### Theoretical background
 The idea is to compare the output of different intaRNA calls with the experimentally verified interactions.
 In order to achieve this, the calls.py script is used on the query and target files of each organism using the specified intaRNA call.
 This results in a result file for each organism and each sRNA query.
