@@ -54,7 +54,7 @@ The tables are also stored in the specified `outputPath`. The individual calls a
 Calls the benchmark.py using the specified callID as benchID.
 
 __Output:__ (contained in the respective callID folder)
-* <query>_<target>.csv -> intarna output for a specific query-target combination (FASTA names used)
+* (query)_(target).csv -> intarna output for a specific query-target combination (FASTA names used)
 * calls.txt -> log file for the calls
 * runTime.csv -> table with runtimes for each query-target combination.
 * memoryUsage.csv -> table with memory usage for each query-target combination.
