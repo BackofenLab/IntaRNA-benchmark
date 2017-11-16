@@ -131,7 +131,7 @@ def main(argv):
                 memoryLine += ";"
 
                 # IntaRNA call
-                call = intaRNAPath + "IntaRNA" + " -q " + srna_file \
+                call = intaRNAPath +"/"+ "IntaRNA" + " -q " + srna_file \
                                                + " -t " + target_file \
                                                + " --out=stdout --outMode=C "  \
                                                + commandLineArguments
