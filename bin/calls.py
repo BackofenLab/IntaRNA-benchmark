@@ -32,7 +32,7 @@ def runSubprocess(callArgs):
     # trigger call as subprocess
     process = Popen(callArgs)
     # wait for call to finish and get statistics
-    ru = os.wait4(process.pid, -10)[2]
+    ru = os.wait4(process.pid, 0)[2]
     # Return time and memory usage
     return ru.ru_utime, ru.ru_maxrss
 
