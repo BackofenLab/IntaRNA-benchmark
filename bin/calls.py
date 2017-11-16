@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# NOTE: python-2 script
 # Author: Rick Gelhausen
 import sys, getopt
 import os
@@ -135,7 +136,8 @@ def main(argv):
                                                + " --out=stdout --outMode=C "  \
                                                + commandLineArguments
                 print(call)
-                print("%s\n" % call, file=open(callLogFilePath,"a"))
+                with open(callLogFilePath, 'a') as callLogFile:
+                    print >>callLogFile, "%s\n" % call
 
                 # Outputfilepath
                 out = os.path.join(outputPath, callID, srna_name + "_" + target_name + ".csv")
@@ -150,11 +152,15 @@ def main(argv):
 
             # print header if file is empty
             if not os.path.exists(timeLogFilePath):
-                print(header, file=open(timeLogFilePath, "a"))
+                with open(timeLogFilePath, 'a') as timeLogFile:
+                    print >>timeLogFile, header
             if not os.path.exists(memoryLogFilePath):
-                print(header, file=open(memoryLogFilePath, "a"))
-            print(timeLine, file=open(timeLogFilePath, "a"))
-            print(memoryLine, file=open(memoryLogFilePath, "a"))
+                with open(memoryLogFilePath, 'a') as memoryLogFile:
+                    print >>memoryLogFile, header
+            with open(timeLogFilePath, 'a') as timeLogFile:
+                print >>timeLogFile, timeLine
+            with open(memoryLogFilePath, 'a') as memoryLogFile:
+                print >>memoryLogFile, memoryLine
 
 
 
