@@ -4,6 +4,7 @@
 import sys, getopt
 import os
 import glob
+import shlex
 from subprocess import Popen
 from subprocess import PIPE
 
@@ -26,16 +27,14 @@ usage= "Call with: python3 calls.py -a1 <argument1> -a2 ..." \
        "--help   (-h) : print this usage. \n"
 
 
-# Run a subprocess with the given call
-def runSubprocess(call_, outputPath):
-    with Popen(call_, shell=True, stdout=PIPE) as process:
-        sys.stdout = open(outputPath, "w")
-        print(str(process.stdout.read(),"utf-8"))
-        sys.stdout = sys.__stdout__
-        ru = os.wait4(process.pid, 0)[2]
-        # Return time and memory usage
+# Run a subprocess with the given call and provide process statistics
+def runSubprocess(callArgs):
+    # trigger call as subprocess
+    process = Popen(callArgs)
+    # wait for call to finish and get statistics
+    ru = os.wait4(process.pid, -10)[2]
+    # Return time and memory usage
     return ru.ru_utime, ru.ru_maxrss
-
 
 def main(argv):
     intaRNAPath = os.path.join("..", "..", "IntaRNA", "src", "bin", "")
@@ -130,20 +129,22 @@ def main(argv):
                 timeLine += ";"
                 memoryLine += ";"
 
-                # IntaRNA call
-                call = intaRNAPath +"/"+ "IntaRNA" + " -q " + srna_file \
-                                               + " -t " + target_file \
-                                               + " --out=stdout --outMode=C "  \
-                                               + commandLineArguments
-                print(call)
-                with open(callLogFilePath, 'a') as callLogFile:
-                    print >>callLogFile, "%s\n" % call
-
                 # Outputfilepath
                 out = os.path.join(outputPath, callID, srna_name + "_" + target_name + ".csv")
 
-                # record time in seconds and memory in KB of this call
-                timeCall, maxMemory = runSubprocess(call, out)
+                # IntaRNA call
+                call = intaRNAPath +"/"+ "IntaRNA" + " -q " + srna_file \
+                                               + " -t " + target_file \
+                                               + " --out " + out \
+                                               + " --outMode C"  \
+                                               + " " + commandLineArguments
+
+                print(call)
+                print shlex.split(call)
+                with open(callLogFilePath, 'a') as callLogFile:
+                    print >>callLogFile, "%s\n" % call
+
+                timeCall, maxMemory = runSubprocess(callArgs)
 
                 # Time in seconds
                 timeLine += "%.2f" % timeCall
