@@ -140,7 +140,9 @@ def main(argv):
                                                + " " + commandLineArguments
 
                 print(call)
-                print shlex.split(call)
+                # split call for subprocess creation
+                callArgs = shlex.split(call)
+
                 with open(callLogFilePath, 'a') as callLogFile:
                     print >>callLogFile, "%s\n" % call
 
