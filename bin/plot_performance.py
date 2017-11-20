@@ -4,8 +4,9 @@
 import sys, getopt
 import os
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-
 
 ########################################################################################################################
 #                                                                                                                      #
@@ -82,7 +83,7 @@ def main(argv):
             keys = rankDictionary.keys()
             for key in keys:
                 plt.plot(rankDictionary[key], label=key)
-
+            # plt.ioff()
             plt.legend(loc="lower right")
             plt.xlabel("# Target predictions per sRNA")
             plt.ylabel("# True positive")
