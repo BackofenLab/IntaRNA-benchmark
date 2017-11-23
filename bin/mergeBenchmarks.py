@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Author: Rick Gelhausen
 import sys, getopt
 import os.path

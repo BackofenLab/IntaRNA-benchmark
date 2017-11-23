@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # NOTE: python > 3.2 needed
 # Author: Rick Gelhausen
 import sys, getopt

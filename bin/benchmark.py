@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Author: Rick Gelhausen, adapted from perl script by Patrick Wright
 import sys, getopt
 import os.path
