@@ -156,17 +156,15 @@ def main(argv):
                     timeLine += ";NA"
                     memoryLine += ";NA"
 
-            # print header if file is empty
             if not os.path.exists(timeLogFilePath):
-                with open(timeLogFilePath, 'a') as timeLogFile:
-                    print >>timeLogFile, header
+                # print header if file is empty
+                print(header, file=open(timeLogFilePath, "a"))
+            print(timeLine, file=open(timeLogFilePath, "a"))
+            
             if not os.path.exists(memoryLogFilePath):
-                with open(memoryLogFilePath, 'a') as memoryLogFile:
-                    print >>memoryLogFile, header
-            with open(timeLogFilePath, 'a') as timeLogFile:
-                print >>timeLogFile, timeLine
-            with open(memoryLogFilePath, 'a') as memoryLogFile:
-                print >>memoryLogFile, memoryLine
+                # print header if file is empty
+                print(header, file=open(memoryLogFilePath, "a"))
+            print(memoryLine, file=open(memoryLogFilePath, "a"))
 
 
     if not noJobStart:
