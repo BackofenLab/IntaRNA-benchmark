@@ -24,6 +24,7 @@ usage= "Call with: python3 calls.py -a1 <argument1> -a2 ..." \
        "--ofile  (-o) : output folder.\n" \
        "--arg    (-a) : command line arguments applied to the intaRNA query. \n" \
        "--callID (-c) : mandatory callID used to identify call. \n" \
+       "--callsOnly (-n) : only generate the calls and store in the logfile but not start processes. \n" \
        "--help   (-h) : print this usage. \n"
 
 
@@ -41,10 +42,11 @@ def main(argv):
     inputPath = os.path.join("..", "input")
     commandLineArguments = ""
     callID = ""
+    noJobStart =  False
 
     # commandline parsing
     try:
-        opts, args = getopt.getopt(argv,"hi:o:f:a:c:",["ifile=", "ofile=", "ffile=", "arg=", "callID="])
+        opts, args = getopt.getopt(argv,"hni:o:f:a:c:",["ifile=", "ofile=", "ffile=", "arg=", "callID=", "callsOnly", "help"])
     except getopt.GetoptError:
         print("ERROR! Call <python3 calls.py -h> for help")
         sys.exit(2)
@@ -52,6 +54,8 @@ def main(argv):
         if opt in ("-h", "--help"):
             print(usage)
             sys.exit()
+        if opt in ("-n", "--callsOnly"):
+            noJobStart = True
         elif opt in ("-i", "--ifile"):
             intaRNAPath = arg
         elif opt in ("-o", "--ofile"):
@@ -69,7 +73,7 @@ def main(argv):
 
     # Check whether intaRNA path exists
     if not os.path.exists(intaRNAPath):
-        sys.exit("Error!!! IntaRNA filePath does not exist! Please specify it using python3 calls.py -i <intaRNApath>!")
+        sys.exit("Error!!! IntaRNA filePath does not exist! Please specify it using -i <intaRNApath>!")
 
     # Create outputFolder for this callID if not existing
     if not os.path.exists(os.path.join(outputPath, callID)):
@@ -124,10 +128,6 @@ def main(argv):
                 srna_name = srna_file.split(os.path.sep)[-1].split("_")[0]
                 header += ";%s" % srna_name
 
-                # Adding column
-                timeLine += ";"
-                memoryLine += ";"
-
                 # Outputfilepath
                 out = os.path.join(outputPath, callID, srna_name + "_" + target_name + ".csv")
 
@@ -138,19 +138,23 @@ def main(argv):
                                                + " --outMode C"  \
                                                + " " + commandLineArguments
 
-                # print(call)
-                # split call for subprocess creation
-                callArgs = shlex.split(call)
-
                 with open(callLogFilePath, 'a') as callLogFile:
                     print >>callLogFile, "%s\n" % call
 
-                timeCall, maxMemory = runSubprocess(callArgs)
-
-                # Time in seconds
-                timeLine += "%.2f" % timeCall
-                # Convert to megabyte (MB)
-                memoryLine += "%.2f" % (float(maxMemory) / 1000)
+                if not noJobStart:
+                    # split call for subprocess creation
+                    callArgs = shlex.split(call)
+                    # do call and get process information
+                    timeCall, maxMemory = runSubprocess(callArgs)
+                    # store process information
+                    # Time in seconds
+                    timeLine += ";%.2f" % timeCall
+                    # Convert to megabyte (MB)
+                    memoryLine += ";%.2f" % (float(maxMemory) / 1000)
+                else:
+                    # store that process information not available (NA)
+                    timeLine += ";NA"
+                    memoryLine += ";NA"
 
             # print header if file is empty
             if not os.path.exists(timeLogFilePath):
@@ -165,11 +169,11 @@ def main(argv):
                 print >>memoryLogFile, memoryLine
 
 
-
-    # Start benchmarking for this callID
-    callBenchmark = "python3 benchmark.py -b %s" % (callID)
-    with Popen(callBenchmark, shell=True, stdout=PIPE) as process:
-        print(str(process.stdout.read(), "utf-8"))
+    if not noJobStart:
+        # Start benchmarking for this callID
+        callBenchmark = "python3 benchmark.py -b %s" % (callID)
+        with Popen(shlex.split(callBenchmark), stdout=PIPE) as process:
+            print(str(process.stdout.read(), "utf-8"))
 
 if __name__ == "__main__":
    main(sys.argv[1:])
