@@ -138,8 +138,7 @@ def main(argv):
                                                + " --outMode C"  \
                                                + " " + commandLineArguments
 
-                with open(callLogFilePath, 'a') as callLogFile:
-                    print >>callLogFile, "%s\n" % call
+                print(call, file=open(callLogFilePath, "a"))
 
                 if not noJobStart:
                     # split call for subprocess creation
