@@ -1,6 +1,13 @@
 # IntaRNA-benchmark
 Data and scripts to benchmark IntaRNA.
 
+### Dependencies
+
+- IntaRNA >= 2.0.0
+- python > 3.2
+- pandas python package
+- matplotlib python package
+
 ### Setup
 The `input` directory contains folders representing certain organisms (here Salmonella and E. coli) or benchmark data sets.
 Each has to contain two folders, one holding the `query` RNAs and one holding the `target` RNAs.

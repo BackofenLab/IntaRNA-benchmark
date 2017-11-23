@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# NOTE: python-2 script
+# NOTE: python > 3.2 needed
 # Author: Rick Gelhausen
 import sys, getopt
 import os
@@ -29,10 +29,9 @@ usage= "Call with: python3 calls.py -a1 <argument1> -a2 ..." \
 
 # Run a subprocess with the given call and provide process statistics
 def runSubprocess(callArgs):
-    # trigger call as subprocess
-    process = Popen(callArgs)
-    # wait for call to finish and get statistics
-    ru = os.wait4(process.pid, 0)[2]
+    with Popen(callcallArgs) as process:
+        # wait for call to finish and get statistics
+        ru = os.wait4(process.pid, 0)[2]
     # Return time and memory usage
     return ru.ru_utime, ru.ru_maxrss
 
@@ -139,7 +138,7 @@ def main(argv):
                                                + " --outMode C"  \
                                                + " " + commandLineArguments
 
-                print(call)
+                # print(call)
                 # split call for subprocess creation
                 callArgs = shlex.split(call)
 
