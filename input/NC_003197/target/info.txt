@@ -1,1 +1,3 @@
+Salmonella enterica subsp. enterica serovar Typhimurium str. LT2
+
 upfromstartpos_200_down_100
