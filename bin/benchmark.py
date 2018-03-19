@@ -103,7 +103,7 @@ def main(argv):
     csv_file.write(outputText)
     csv_file.close()
 
-    print("Finished benchmarking: %s" % benchID)
+    print("Finished benchmarking: %s" % args.benchID)
 
 if __name__ == "__main__":
    main(sys.argv[1:])
