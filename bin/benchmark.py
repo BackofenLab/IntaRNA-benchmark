@@ -15,7 +15,7 @@ def main(argv):
                         , help="path to directory containing the output of the calls script. ")
     parser.add_argument("-b", "--benchID", action="store", dest="benchID", default=""
                         , help="a mandatory ID to differentiate between multiple calls of the script.")
-    args = parser.parse_args();
+    args = parser.parse_args()
 
     # Check whether a benchID was given
     if args.benchID == "":
@@ -29,10 +29,9 @@ def main(argv):
         sys.exit("Error: %s! File not found!" % (args.verified_interactions))
 
     # check whether the benchID is valid (no file with that name exists)
-    outputPath = os.path.join("..", "output", args.benchID, args.outputfile)
+    outputPath = os.path.join(args.directoryPath, args.benchID, args.outputfile)
     if os.path.exists(outputPath):
         sys.exit("A file for this benchID already exists! Exiting...")
-
 
     # Create a dictionary for better accessibility of srna data
     confirmed_hybrids = dict()
@@ -52,7 +51,6 @@ def main(argv):
         else:
             confirmed_hybrids[(spl[0], spl[3])] = [(spl[1], spl[2])]
 
-    print("Starting benchmarking: %s" % args.benchID)
     # Get all directories with needed files and sort them
     srna_files = [x for x in glob.glob(os.path.join(args.directoryPath, args.benchID, "*.csv")) if x.split(os.path.sep)[-1].split("_")[0] in srnaList]
     srna_files.sort()
@@ -77,6 +75,7 @@ def main(argv):
             if (srna_name, organism) in confirmed_hybrids:
                 for confirmed_hybrid in confirmed_hybrids[(srna_name, organism)]:
                     for file in srnaDict[srna_name]:
+                        print(file)
                         df = pd.read_csv(file, sep=";", header=0)
                         df = df.sort_values("E")
 
@@ -91,7 +90,6 @@ def main(argv):
                             outputText += "%s;%s;%s;%s\n" % (srna_name, target_ltag, target_name, intaRNA_rank)
                         except ValueError:
                             continue
-
 
 
     # Check whether the outputFile is empty

@@ -112,11 +112,11 @@ def main(argv):
                 out = os.path.join(args.outputPath, args.callID, srna_name + "_" + target_name + ".csv")
 
                 # IntaRNA call
-                call = args.intaRNAPath +"/"+ "IntaRNA" + " -q " + srna_file \
-                                               + " -t " + target_file \
-                                               + " --out " + out \
-                                               + " --outMode C"  \
-                                               + " " + cmdLineArgs
+                call = args.intaRNAPath + "IntaRNA" + " -q " + srna_file \
+                                                    + " -t " + target_file \
+                                                    + " --out " + out \
+                                                    + " --outMode C "  \
+                                                    + cmdLineArgs
 
                 print(call, file=open(callLogFilePath, "a"))
 
