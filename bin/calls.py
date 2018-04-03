@@ -8,6 +8,7 @@ import shlex
 from subprocess import Popen
 from subprocess import PIPE
 
+
 ########################################################################################################################
 #                                                                                                                      #
 #            This script calls intaRNA with custom parameters on a set of sRNA queries and mRNA targets.               #
@@ -25,20 +26,26 @@ def runSubprocess(callArgs):
     # Return time and memory usage
     return ru.ru_utime, ru.ru_maxrss
 
+
 def main(argv):
-    parser = argparse.ArgumentParser(description="Call script for benchmarking IntaRNA. IntaRNA commandLineArguments can be added at the end of the call."
-                                                 "python3 calls.py -c <callID>  --<IntaRNA arguments>")
-    parser.add_argument("-i", "--ifile", action="store", dest="intaRNAPath", default=os.path.join("..", "..", "IntaRNA", "src", "bin", "")
+    fastaFileEndings = [".fasta", ".fa"]
+
+    parser = argparse.ArgumentParser(
+        description="Call script for benchmarking IntaRNA. IntaRNA commandLineArguments can be added at the end of the call."
+                    "python3 calls.py -c <callID>  --<IntaRNA arguments>")
+    parser.add_argument("-i", "--ifile", action="store", dest="intaRNAPath",
+                        default=os.path.join("..", "..", "IntaRNA", "src", "bin", "")
                         , help="the location of the intaRNA executable. Default: ../../IntaRNA/src/bin .")
     parser.add_argument("-f", "--ffile", action="store", dest="inputPath", default=os.path.join("..", "input")
                         , help="input folder containing the required fasta files. Default: ./input")
     parser.add_argument("-o", "--ofile", action="store", dest="outputPath", default=os.path.join("..", "output")
                         , help="location of the output folder.")
-    #parser.add_argument("-a", "--arg", help="command line arguments applied to the intaRNA query.")
     parser.add_argument("-c", "--callID", action="store", dest="callID", default=""
                         , help="a mandatory ID to differentiate between multiple calls of the script.")
     parser.add_argument("-n", "--callsOnly", action="store_true", dest="noJobStart", default=False
                         , help="only generate the calls and store in the logfile but not start processes.")
+    parser.add_argument("-e", "--withTargetED", action="store_true", dest="enabledTargetED", default=False
+                        , help="Target ED-values will be stored in a data folder and reused for all further computations.")
 
     #   Warning  Prefix matching rules apply to parse_known_args().
     #  The parser may consume an option even if it’s just a prefix of one of its known options, instead of leaving it in the remaining arguments list.
@@ -62,10 +69,41 @@ def main(argv):
         sys.exit("Error!!! A directory for callID %s already exists!" % args.callID)
 
     # Organisms
-    organisms = [x.split(os.path.sep)[-1] for x in glob.glob(os.path.join(args.inputPath,"*")) if os.path.isdir(x)]
+    organisms = [x.split(os.path.sep)[-1] for x in glob.glob(os.path.join(args.inputPath, "*")) if os.path.isdir(x)]
     if organisms == []:
         sys.exit("Input folder is empty!")
 
+
+    # Compute target ED-value files for each organism and option enabled (if not existant)
+    if (args.enabledTargetED):
+        print("Preprocessing target ED-values!!")
+        for organism in organisms:
+            target_files = []
+            for ending in fastaFileEndings:
+                target_files.extend(glob.glob(os.path.join(args.inputPath, organism, "target", "*" + ending)))
+            target_files.sort()
+
+            for target in target_files:
+                target_name = os.path.basename(os.path.splitext(target)[0])
+                edValueFolder = os.path.join("..", "ED-values", organism, target_name)
+                if not os.path.exists(edValueFolder):
+                    os.makedirs(edValueFolder)
+                    call = args.intaRNAPath + "IntaRNA" + " -q " + "A" \
+                                                        + " -t " + target + " --noSeed" \
+                                                        + " -n 0 --out=/dev/null" \
+                                                        + " --out=tAcc:" + os.path.join(edValueFolder, "intarna.target.ed")
+
+                    # if user enables threading, also add it to the precomputation of target ED values
+                    if "threads " in cmdLineArgs:
+                        call += "--threads " + cmdLineArgs.split("threads ")[-1].split(" ")[0]
+                    elif "threads=" in cmdLineArgs:
+                        call += "--threads=" + cmdLineArgs.split("threads=")[-1].split(" ")[0]
+
+                    # call
+                    callArgs = shlex.split(call)
+                    runSubprocess(callArgs)
+
+        print("Preprocessing completed!")
     # Filepaths
     callLogFilePath = os.path.join(args.outputPath, args.callID, "calls.txt")
     timeLogFilePath = os.path.join(args.outputPath, args.callID, "runTime.csv")
@@ -78,7 +116,6 @@ def main(argv):
         if not os.path.exists(os.path.join(args.inputPath, organism, "target")):
             sys.exit("Error!!! Could not find target path for %s!" % organism)
 
-        fastaFileEndings = [".fasta", ".fa"]
 
         srna_files = []
         target_files = []
@@ -96,9 +133,8 @@ def main(argv):
         if len(target_files) == 0:
             sys.exit("Error!!! No target fasta files found in target folder!")
 
-
         for target_file in target_files:
-            target_name = target_file.split(os.path.sep)[-1].split(".")[0]
+            target_name = os.path.basename(os.path.splitext(target_file)[0])
             # Variables to create the timeLog table
             header = "callID;target_name;Organism"
             timeLine = "%s;%s;%s" % (args.callID, target_name, organism)
@@ -115,8 +151,13 @@ def main(argv):
                 call = args.intaRNAPath + "IntaRNA" + " -q " + srna_file \
                                                     + " -t " + target_file \
                                                     + " --out " + out \
-                                                    + " --outMode C "  \
+                                                    + " --outMode C " \
                                                     + cmdLineArgs
+
+                if (args.enabledTargetED):
+                    call += " --tAcc=E --tAccFile=" \
+                            + os.path.join("..", "ED-values", organism, target_name, "intarna.target.ed") \
+                            + " --tIntLenMax 150"
 
                 print(call, file=open(callLogFilePath, "a"))
 
@@ -139,12 +180,11 @@ def main(argv):
                 # print header if file is empty
                 print(header, file=open(timeLogFilePath, "a"))
             print(timeLine, file=open(timeLogFilePath, "a"))
-            
+
             if not os.path.exists(memoryLogFilePath):
                 # print header if file is empty
                 print(header, file=open(memoryLogFilePath, "a"))
             print(memoryLine, file=open(memoryLogFilePath, "a"))
-
 
     if not args.noJobStart:
         # Start benchmarking for this callID
@@ -152,5 +192,6 @@ def main(argv):
         with Popen(shlex.split(callBenchmark), stdout=PIPE) as process:
             print(str(process.stdout.read(), "utf-8"))
 
+
 if __name__ == "__main__":
-   main(sys.argv[1:])
+    main(sys.argv[1:])

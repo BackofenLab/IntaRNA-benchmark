@@ -75,8 +75,11 @@ def main(argv):
             if (srna_name, organism) in confirmed_hybrids:
                 for confirmed_hybrid in confirmed_hybrids[(srna_name, organism)]:
                     for file in srnaDict[srna_name]:
-                        print(file)
-                        df = pd.read_csv(file, sep=";", header=0)
+                        try:
+                            df = pd.read_csv(file, sep=";", header=0)
+                        except pd.errors.ParserError as err:
+                            errorMessage = "%s      in file %s \n\nPlease contact the IntaRNA development team." % (err, file)
+                            sys.exit(errorMessage)
                         df = df.sort_values("E")
 
                         target_ltag = confirmed_hybrid[0]
