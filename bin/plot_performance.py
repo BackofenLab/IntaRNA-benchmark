@@ -20,11 +20,11 @@ def main(argv):
     parser = argparse.ArgumentParser(description="Script for plotting the benchmark results")
     parser.add_argument("-i", "--ifile", action="store", dest="benchmarkFile", default=os.path.join("")
                         , help="Mandatory benchmark file to be used for plotting.")
-    parser.add_argument("-o", "--ofile", action="store", dest="outFile", default=os.path.join("", "output", "intaRNA2_benchmark.pdf")
+    parser.add_argument("-o", "--ofile", action="store", dest="outFile", default=os.path.join("..", "output", "intaRNA2_benchmark.pdf")
                         , help="the path of the outputFilePath.")
     parser.add_argument("-s", "--sep", action="store", dest="separator", default=";"
                         , help="specify the separator used by the benchmark file.")
-    parser.add_argument("-e", "--end", action="store", dest="end", default=200
+    parser.add_argument("-e", "--end", action="store", dest="end", default=200, type=int
                         , help="The amount of predictions considered for plotting.")
     parser.add_argument("-x", "--xlim", action="store", dest="xlim", default=""
                         , help="specify a xlim for the output.")
@@ -57,7 +57,7 @@ def main(argv):
             # Plot the data
             keys = rankDictionary.keys()
             for key in keys:
-                plt.plot(rankDictionary[key], label=key)
+                plt.plot(rankDictionary[key], label=key.replace("_intarna_rank", ""))
 
             plt.legend(loc="lower right")
             plt.xlabel("# Target predictions per sRNA")

@@ -61,7 +61,7 @@ def main(argv):
                         , help=" path to the benchmark folders.")
     parser.add_argument("-b", "--benchID", action="store", dest="benchID", default=""
                         , help="a mandatory ID to differentiate between multiple calls of the script. Specify multiple ones by using benchID1/benchID2/...")
-    parser.add_argument("-a", "--all", action="store_true", dest="benchID", default=False
+    parser.add_argument("-a", "--all", action="store_true", dest="all", default=False
                         , help="When set all available benchmark folders will be merged.")
     args = parser.parse_args();
 
@@ -73,7 +73,7 @@ def main(argv):
     allIDfolders = [x for x in glob.glob(os.path.join(args.benchFilePath, "*")) if os.path.isdir(x)]
     print(allIDfolders)
 
-    if not all:
+    if not args.all:
         # Check whether a benchID was given
         if args.benchID == "" or not "/" in args.benchID:
             sys.exit("Please specify atleast two benchIDs using python3 mergeBenchmarks -b <name1/name2>")
