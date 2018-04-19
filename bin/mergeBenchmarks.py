@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Author: Rick Gelhausen
-import sys, getopt
+import sys, argparse
 import os.path
 import glob
 import pandas as pd
@@ -12,16 +12,6 @@ import pandas as pd
 #                                        Merge all or specific callIDs                                                 #
 #                                                                                                                      #
 ########################################################################################################################
-
-# help text
-usage = "Call with: python3 mergeBenchmarks.py -a1 <argument1> -a2 ... \n" \
-        "The following arguments are available: \n" \
-        "--ofile   (-o) : path and name of outputfile. MANDATORY. .\n" \
-        "--bdirs   (-d) : path to the benchmark folder. Default: ./output \n" \
-        "--benchID (-b) : benchIDs to be merged. benchID1/benchID2/... \n" \
-        "--all     (-a) : if parameter is set no benchID needs to be specified. Every ID is used automatically.\n" \
-        "--help    (-h) : print usage. \n"
-
 
 # This method assumes an equal setup of all benchmark files
 def mergeBenchmarks(benchList, outputPath):
@@ -62,67 +52,55 @@ def mergeLogFiles(benchIDList, benchPath, outputpath):
 
 
 def main(argv):
-    benchFilePath = os.path.join("..", "output")
-    infileName = "benchmark.csv"
-    outputfile = ""
-    benchID = ""
-    all = False
-    try:
-        opts, args = getopt.getopt(argv, "hi:o:d:b:a", ["ifile=", "ofile=", "bdirs=", "benchID="])
-    except getopt.GetoptError:
-        print("ERROR! Call <python3 mergeBenchmarks.py -h> for help!")
-        sys.exit(2)
-    for opt, arg in opts:
-        if opt in ("-h", "--help"):
-            print(usage)
-            sys.exit()
-        elif opt in ("-i", "--ifile"):
-            infileName = arg
-        elif opt in ("-o", "--ofile"):
-            outputfile = arg
-        elif opt in ("-d", "--bdirs"):
-            benchFilePath = arg
-        elif opt in ("-b", "--benchID"):
-            benchID = arg
-        elif opt in ("-a", "--all"):
-            all = True
+    parser = argparse.ArgumentParser(description="Script to merge multiple benchmarks")
+    parser.add_argument("-i", "--ifile", action="store", dest="infileName", default=os.path.join("benchmark.csv")
+                        , help="The default name of the result file of the benchmarking script")
+    parser.add_argument("-o", "--ofile", action="store", dest="outputfile", default=os.path.join("")
+                        , help="Mandatory path and name for the outputfile.")
+    parser.add_argument("-d", "--bdirs", action="store", dest="benchFilePath", default=os.path.join("..", "output")
+                        , help=" path to the benchmark folders.")
+    parser.add_argument("-b", "--benchID", action="store", dest="benchID", default=""
+                        , help="a mandatory ID to differentiate between multiple calls of the script. Specify multiple ones by using benchID1/benchID2/...")
+    parser.add_argument("-a", "--all", action="store_true", dest="all", default=False
+                        , help="When set all available benchmark folders will be merged.")
+    args = parser.parse_args();
 
     # Enforce an outputfile path/name.csv
-    if outputfile == "":
+    if args.outputfile == "":
         sys.exit("Please use: python3 mergeBenchmarks.py -o <path/name.csv> to specify an output file!")
 
     # read all benchfiles in folder
-    allIDfolders = [x for x in glob.glob(os.path.join(benchFilePath, "*")) if os.path.isdir(x)]
+    allIDfolders = [x for x in glob.glob(os.path.join(args.benchFilePath, "*")) if os.path.isdir(x)]
     print(allIDfolders)
 
-    if not all:
+    if not args.all:
         # Check whether a benchID was given
-        if benchID == "" or not "/" in benchID:
+        if args.benchID == "" or not "/" in args.benchID:
             sys.exit("Please specify atleast two benchIDs using python3 mergeBenchmarks -b <name1/name2>")
 
         toBeMerged = []
         existingBenchIDs = []
-        benchIDs = benchID.split("/")
+        benchIDs = args.benchID.split("/")
         for bID in benchIDs:
             for folder in allIDfolders:
                 if bID == folder.split(os.path.sep)[-1]:
-                    toBeMerged.append(os.path.join(folder, infileName))
+                    toBeMerged.append(os.path.join(folder, args.infileName))
                     existingBenchIDs.append(bID)
 
         if len(toBeMerged) > 1:
-            mergeBenchmarks(toBeMerged, outputfile)
-            mergeLogFiles(existingBenchIDs, benchFilePath, outputfile)
+            mergeBenchmarks(toBeMerged, args.outputfile)
+            mergeLogFiles(existingBenchIDs, args.benchFilePath, args.outputfile)
         else:
             sys.exit("Not enough files to merge!")
 
     # Merge all
     else:
         if len(allIDfolders) > 1:
-            allIDfolders = [os.path.join(x, infileName) for x in allIDfolders]
+            allIDfolders = [os.path.join(x, args.infileName) for x in allIDfolders]
 
-            mergeBenchmarks(allIDfolders, outputfile)
+            mergeBenchmarks(allIDfolders, args.outputfile)
             allIDs = [x.split(os.path.sep)[-2] for x in allIDfolders]
-            mergeLogFiles(allIDs, benchFilePath, outputfile)
+            mergeLogFiles(allIDs, args.benchFilePath, args.outputfile)
         else:
             sys.exit("Not enough files to merge!")
 

@@ -49,7 +49,9 @@ __Parameters:__
 * __inputPath (`-f`)__ location of the folder containing folders for each organism. The organism folders have to contain a query and a target folder holding the according fasta files. Default: __..__/input/
 * __outputPath (`-o`)__ location of the output folder. The script will add a folder for each callID. Default: __..__/output/
 * __callID (`-c`)__ is a mandatory ID to differentiate between multiple calls of the script.
-* __arg (`-a`)__ commandline arguments for intaRNA.
+* __withED (`-e`)__ allows the precomputation of target ED-values in order to avoid recomputation.
+
+__IMPORTANT:__ Arguments for IntaRNA can be added at the end of the script call and will be redirected to IntaRNA. python3 calls.py -c "callID"   --"IntaRNA cmdLineArguments"
 
 This script calls IntaRNA from `intaRNAPath` using the queries and targets for all data sets found within the `inputPath` (see above) and the additional parameterization provided by `arg`.
 The results of IntaRNA are piped to stdout and then into an output file in the `outputPath` where the `callID` is used for according file naming.
@@ -57,6 +59,10 @@ There are many different controls to assure that no files are overwritten and th
 
 The time (in seconds) and maximal memory usage (in megabyte) required to handle each call is also measured and represented in a table. 
 The tables are also stored in the specified `outputPath`. The individual calls are also logged into a log file.
+
+When `withED` option is set, the ED-values for all targets will be precomputed and stored in a folder `ED-values/'organism'/target_name/`.
+They are then used by all further IntaRNA calls. If the target ED-values are already contained in the given folder, they are directly used without recomputation.
+This option was only tested for ViennaRNA version 2.4.4 and IntaRNA version 2.2.0 and might not work for older versions.
 
 Calls the benchmark.py using the specified callID as benchID.
 

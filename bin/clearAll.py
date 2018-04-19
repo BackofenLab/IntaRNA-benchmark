@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Author: Rick Gelhausen
-import sys, getopt
+import sys, argparse
 import os
 import glob
 import shutil
@@ -28,29 +28,19 @@ def deleteFolders(foldersToDeleteList):
             print(e)
 
 def main(argv):
-    inFilePath = os.path.join("..", "output")
-    callID = ""
 
-    # commandline parsing
-    try:
-        opts, args = getopt.getopt(argv,"hf:c:",["ffile=","callID="])
-    except getopt.GetoptError:
-        print("ERROR! Call <python3 clearAll.py -h> for help")
-        sys.exit(2)
-    for opt, arg in opts:
-        if opt in ("-h", "--help"):
-            print(usage)
-            sys.exit()
-        elif opt in ("-f", "--ffile"):
-            inFilePath = arg
-        elif opt in ("-c", "--callID"):
-            callID = arg
+    parser = argparse.ArgumentParser(description="Script for clearing benchmarks")
+    parser.add_argument("-f", "--ffile", action="store", dest="inFilePath", default=os.path.join("..", "output")
+                        , help="the location of the intaRNA executable. Default: ../../IntaRNA/src/bin .")
+    parser.add_argument("-c", "--callID", action="store", dest="callID", default=os.path.join("")
+                        , help="Allows clearing only certain callIDs. Specify multiple callIDs with callID1/callID2/...")
+    args = parser.parse_args()
 
     # read all files
-    allFolders = glob.glob(os.path.join(inFilePath, "*"))
+    allFolders = glob.glob(os.path.join(args.inFilePath, "*"))
 
     # clear all created files
-    if callID == "":
+    if args.callID == "":
         for benchFolder in allFolders:
             print("File: %s flagged for delete!" % (benchFolder))
 
@@ -62,10 +52,10 @@ def main(argv):
             sys.exit("Aborting!!!")
     else:
         callIDs = []
-        if "/" in callID:
-            callIDs = callID.split("/")
+        if "/" in args.callID:
+            callIDs = args.callID.split("/")
         else:
-            callIDs.append(callID)
+            callIDs.append(args.callID)
 
         foldersToDelete = []
         for c in callIDs:

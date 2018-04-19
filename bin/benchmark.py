@@ -1,58 +1,37 @@
 #!/usr/bin/env python3
 # Author: Rick Gelhausen, adapted from perl script by Patrick Wright
-import sys, getopt
+import sys, argparse
 import os.path
 import pandas as pd
 import glob
 
-# help text
-usage= "Call with: python3 benchmark.py -a1 <argument1> -a2 ... \n" \
-       "The following arguments are available: \n" \
-       "--ifile   (-i) : path of the file containing the verified interactions. Default: ../verified_interactions.csv . \n" \
-       "--ofile   (-o) : path of the benchmark outputfile. Default: ./benchmark.csv .\n" \
-       "--pdirs   (-p) : path to directory containing the output of the calls script. Default: ../output \n" \
-       "--benchID (-b) : mandatory benchID used to identify benchmarking. \n" \
-       "--help    (-h) : print usage. \n"
-
 def main(argv):
-    verified_interactions = os.path.join("..", "verified_interactions.csv")
-    directoryPath = os.path.join("..", "output")
-    outputfile = "benchmark.csv"
-    benchID = ""
-    try:
-        opts, args = getopt.getopt(argv,"hi:o:p:b:",["ifile=","ofile=","pdirs=","benchID="])
-    except getopt.GetoptError:
-        print("ERROR! Call <python3 benchmark.py -h> for help!")
-        sys.exit(2)
-    for opt, arg in opts:
-        if opt in ("-h", "--help"):
-            print(usage)
-            sys.exit()
-        elif opt in ("-i", "--ifile"):
-            verified_interactions = arg
-        elif opt in ("-o", "--ofile"):
-            outputfile = arg
-        elif opt in ("-p", "--pdirs"):
-            directoryPath = arg
-        elif opt in ("-b", "--benchID"):
-            benchID = arg
+    parser = argparse.ArgumentParser(description="Benchmark IntaRNA")
+    parser.add_argument("-i", "--ifile", action="store", dest="verified_interactions", default=os.path.join("..", "verified_interactions.csv")
+                        , help= "location of the file containing the verified interactions.")
+    parser.add_argument("-o", "--ofile", action="store", dest="outputfile", default=os.path.join(".", "benchmark.csv")
+                        , help="path of the benchmark outputfile.")
+    parser.add_argument("-p", "--pdirs", action="store", dest="directoryPath", default=os.path.join("..", "output")
+                        , help="path to directory containing the output of the calls script. ")
+    parser.add_argument("-b", "--benchID", action="store", dest="benchID", default=""
+                        , help="a mandatory ID to differentiate between multiple calls of the script.")
+    args = parser.parse_args()
 
     # Check whether a benchID was given
-    if benchID == "":
+    if args.benchID == "":
         sys.exit("No benchID was specified! Please specify a benchID using -b <name> or --benchID=<name>")
 
     # read verified interactions
-    if os.path.exists(verified_interactions) == True:
-        with open(verified_interactions) as data:
+    if os.path.exists(args.verified_interactions) == True:
+        with open(args.verified_interactions) as data:
             tempHybrid = [line.strip() for line in data]
     else:
-        sys.exit("Error: %s! File not found!" % (verified_interactions))
+        sys.exit("Error: %s! File not found!" % (args.verified_interactions))
 
     # check whether the benchID is valid (no file with that name exists)
-    outputPath = os.path.join("..", "output", benchID, outputfile)
+    outputPath = os.path.join(args.directoryPath, args.benchID, args.outputfile)
     if os.path.exists(outputPath):
         sys.exit("A file for this benchID already exists! Exiting...")
-
 
     # Create a dictionary for better accessibility of srna data
     confirmed_hybrids = dict()
@@ -72,14 +51,13 @@ def main(argv):
         else:
             confirmed_hybrids[(spl[0], spl[3])] = [(spl[1], spl[2])]
 
-    print("Starting benchmarking: %s" % benchID)
     # Get all directories with needed files and sort them
-    srna_files = [x for x in glob.glob(os.path.join(directoryPath, benchID, "*.csv")) if x.split(os.path.sep)[-1].split("_")[0] in srnaList]
+    srna_files = [x for x in glob.glob(os.path.join(args.directoryPath, args.benchID, "*.csv")) if x.split(os.path.sep)[-1].split("_")[0] in srnaList]
     srna_files.sort()
 
     # Check whether the needed files for the benchmarking exist
     if srna_files == []:
-        sys.exit("Error!!! No files found for benchmarking ID %s" % benchID)
+        sys.exit("Error!!! No files found for benchmarking ID %s" % args.benchID)
 
     # Create a dictionary from the srna_files for better access
     srnaDict = dict()
@@ -89,7 +67,7 @@ def main(argv):
         else:
             srnaDict[srna] = [x for x in srna_files if srna in x]
 
-    outputText= "srna_name;target_ltag;target_name;%s_intarna_rank\n" % benchID
+    outputText= "srna_name;target_ltag;target_name;%s_intarna_rank\n" % args.benchID
 
     # determine the rank of intaRNA given the confirmed hybrids
     for srna_name in srnaList:
@@ -97,7 +75,11 @@ def main(argv):
             if (srna_name, organism) in confirmed_hybrids:
                 for confirmed_hybrid in confirmed_hybrids[(srna_name, organism)]:
                     for file in srnaDict[srna_name]:
-                        df = pd.read_csv(file, sep=";", header=0)
+                        try:
+                            df = pd.read_csv(file, sep=";", header=0)
+                        except pd.errors.ParserError as err:
+                            errorMessage = "%s      in file %s \n\nPlease contact the IntaRNA development team." % (err, file)
+                            sys.exit(errorMessage)
                         df = df.sort_values("E")
 
                         target_ltag = confirmed_hybrid[0]
@@ -113,7 +95,6 @@ def main(argv):
                             continue
 
 
-
     # Check whether the outputFile is empty
     if outputText == "srna_name;target_ltag;target_name;intarna_rank\n":
         sys.exit("No reasonable output found!")
@@ -123,7 +104,7 @@ def main(argv):
     csv_file.write(outputText)
     csv_file.close()
 
-    print("Finished benchmarking: %s" % benchID)
+    print("Finished benchmarking: %s" % args.benchID)
 
 if __name__ == "__main__":
    main(sys.argv[1:])
