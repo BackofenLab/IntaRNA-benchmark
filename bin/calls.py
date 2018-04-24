@@ -88,22 +88,23 @@ def main(argv):
                 edValueFolder = os.path.join("..", "ED-values", organism, target_name)
                 if not os.path.exists(edValueFolder):
                     os.makedirs(edValueFolder)
-                    call = args.intaRNAPath + "IntaRNA" + " -q " + "A" \
+                    call = args.intaRNAPath + "IntaRNA" + " -q " + "AAAAAAAA" \
                                                         + " -t " + target + " --noSeed" \
                                                         + " -n 0 --out=/dev/null" \
                                                         + " --out=tAcc:" + os.path.join(edValueFolder, "intarna.target.ed")
 
                     # if user enables threading, also add it to the precomputation of target ED values
                     if "threads " in cmdLineArgs:
-                        call += "--threads " + cmdLineArgs.split("threads ")[-1].split(" ")[0]
+                        call += " --threads " + cmdLineArgs.split("threads ")[-1].split(" ")[0]
                     elif "threads=" in cmdLineArgs:
-                        call += "--threads=" + cmdLineArgs.split("threads=")[-1].split(" ")[0]
+                        call += " --threads=" + cmdLineArgs.split("threads=")[-1].split(" ")[0]
 
                     # call
                     callArgs = shlex.split(call)
                     runSubprocess(callArgs)
 
         print("Preprocessing completed!")
+
     # Filepaths
     callLogFilePath = os.path.join(args.outputPath, args.callID, "calls.txt")
     timeLogFilePath = os.path.join(args.outputPath, args.callID, "runTime.csv")
