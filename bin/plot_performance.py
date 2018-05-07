@@ -5,8 +5,10 @@ import sys, argparse
 import os
 import pandas as pd
 import matplotlib
+import re
 
 matplotlib.use('Agg')
+from itertools import cycle
 import matplotlib.pyplot as plt
 
 ########################################################################################################################
@@ -15,6 +17,28 @@ import matplotlib.pyplot as plt
 #                                                                                                                      #
 #                                                                                                                      #
 ########################################################################################################################
+
+# List of easily differentiable color codes
+colorList = ['#f032e6', '#808080', '#000080', '#808000', '#aaffc3', '#800000', '#aa6e28', '#e6beff', '#008080',
+             '#fabebe', '#d2f53c', '#46f0f0', '#911eb4', '#f58231', '#0082c8', '#ffe119', '#3cb44b']
+
+lineList = ["--", ":"]
+
+# Differentiate between ints and other chars/strings
+def isInt(i):
+    try:
+        return int(i)
+    except:
+        return i
+
+# Split strings into lists of strings and numbers
+def alphanumeric_key(s):
+    return [isInt(c) for c in re.split('([0-9]+)', s)]
+
+# Sort the way a human expects it
+def human_sort(l):
+    l.sort(key=alphanumeric_key)
+
 
 def main(argv):
     parser = argparse.ArgumentParser(description="Script for plotting the benchmark results")
@@ -30,6 +54,12 @@ def main(argv):
                         , help="specify a xlim for the output.")
     parser.add_argument("-y", "--ylim", action="store", dest="ylim", default=""
                         , help="specify a ylim for the output.")
+    parser.add_argument("-f", "--fixed", action="store", dest="fixedID", default=""
+                        , help="callID that gets a fixed color (red)")
+    parser.add_argument("-t", "--title", action="store", dest="title", default=""
+                        , help="the title of the plot.")
+    parser.add_argument("--lines", action="store_true", dest="lines", default=False
+                        , help="use different line types, evenly distributed")
     args = parser.parse_args()
 
     if args.benchmarkFile == "":
@@ -39,7 +69,7 @@ def main(argv):
     if os.path.exists(args.benchmarkFile):
         benchDF = pd.read_csv(args.benchmarkFile, sep=args.separator, header=0)
         prefix = ["srna_name", "target_ltag", "target_name"]
-        intarnaIDs = [x for x in benchDF.columns if x not in prefix]
+        intarnaIDs = [x.replace("_intarna_rank", "") for x in benchDF.columns if x not in prefix]
         print(intarnaIDs)
 
         rankDictionary = dict()
@@ -50,19 +80,45 @@ def main(argv):
         # Get the ranks for each callID
         for i in range(1, args.end):
             for id in intarnaIDs:
-                rankDictionary[id].append(len(benchDF[benchDF[id] <= i]))
+                rankDictionary[id].append(len(benchDF[benchDF[id+"_intarna_rank"] <= i]))
 
         # Plot the data
         if bool(rankDictionary):
             # Plot the data
-            keys = rankDictionary.keys()
-            for key in keys:
-                plt.plot(rankDictionary[key], label=key.replace("_intarna_rank", ""))
+            keys = list(rankDictionary.keys())
+            human_sort(keys)
+            # If fixedID is given plot it in red
+            if args.fixedID != "":
+                if args.fixedID in keys:
+                    keys.remove(args.fixedID)
+                    plt.plot(rankDictionary[args.fixedID], label=args.fixedID, color="red", zorder=30)
+                else:
+                    print("Given callID is not flagged for plotting. Proceeding...")
 
+            linecycler = cycle(lineList)
+            # Plot all wanted callIDs
+            for key in keys:
+                if not args.lines:
+                    if (len(keys) > 17):
+                        plt.plot(rankDictionary[key], label=key)
+                    else:
+                        plt.plot(rankDictionary[key], label=key, color=colorList.pop())
+                else:
+                    if (len(keys) > 17):
+                        plt.plot(rankDictionary[key], label=key, linestyle=next(linecycler))
+                    else:
+                        plt.plot(rankDictionary[key], label=key, color=colorList.pop(), linestyle=next(linecycler))
+
+            # Set the title, if given
+            if args.title != "":
+                plt.title(args.title)
+
+            # Create the legend
             plt.legend(loc="lower right")
             plt.xlabel("# Target predictions per sRNA")
             plt.ylabel("# True positive")
 
+            # Handle user input for the x and y limits
             if args.xlim != "" and "/" in args.xlim:
                 plt.xlim(int(args.xlim.split("/")[0]), int(args.xlim.split("/")[1]))
             if args.ylim != "" and "/" in args.ylim:
