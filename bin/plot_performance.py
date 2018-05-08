@@ -6,6 +6,7 @@ import os
 import pandas as pd
 import matplotlib
 import re
+import operator
 
 matplotlib.use('Agg')
 from itertools import cycle
@@ -22,7 +23,7 @@ import matplotlib.pyplot as plt
 colorList = ['#f032e6', '#808080', '#000080', '#808000', '#aaffc3', '#800000', '#aa6e28', '#e6beff', '#008080',
              '#fabebe', '#d2f53c', '#46f0f0', '#911eb4', '#f58231', '#0082c8', '#ffe119', '#3cb44b']
 
-lineList = ["--", ":"]
+lineList = ["--", "-"]
 
 # Differentiate between ints and other chars/strings
 def isInt(i):
@@ -60,6 +61,8 @@ def main(argv):
                         , help="the title of the plot.")
     parser.add_argument("--lines", action="store_true", dest="lines", default=False
                         , help="use different line types, evenly distributed")
+    parser.add_argument("-p", "--plotType", action="store", dest="plotType", default="roc"
+                        , help="Decide whether to use ROC or Violin plots.")
     args = parser.parse_args()
 
     if args.benchmarkFile == "":
@@ -72,6 +75,7 @@ def main(argv):
         intarnaIDs = [x.replace("_intarna_rank", "") for x in benchDF.columns if x not in prefix]
         print(intarnaIDs)
 
+
         rankDictionary = dict()
         # Init dictionary
         for entry in intarnaIDs:
@@ -82,50 +86,87 @@ def main(argv):
             for id in intarnaIDs:
                 rankDictionary[id].append(len(benchDF[benchDF[id+"_intarna_rank"] <= i]))
 
-        # Plot the data
-        if bool(rankDictionary):
+        # plot type roc
+        if args.plotType == "roc":
             # Plot the data
+            if bool(rankDictionary):
+                # Plot the data
+                keys = list(rankDictionary.keys())
+                human_sort(keys)
+
+                linecycler = cycle(lineList)
+                # Plot all wanted callIDs
+                for key in keys:
+                    # If fixedID is given plot it in red
+                    if args.fixedID != "":
+                        if key == args.fixedID:
+                            plt.plot(rankDictionary[args.fixedID], label=args.fixedID, color="red", zorder=30)
+                            continue
+
+                    # Plot rest
+                    if not args.lines:
+                        if (len(keys) > 17):
+                            plt.plot(rankDictionary[key], label=key)
+                        else:
+                            plt.plot(rankDictionary[key], label=key, color=colorList.pop())
+                    else:
+                        if (len(keys) > 17):
+                            plt.plot(rankDictionary[key], label=key, linestyle=next(linecycler))
+                        else:
+                            plt.plot(rankDictionary[key], label=key, color=colorList.pop(), linestyle=next(linecycler))
+
+                # Set the title, if given
+                if args.title != "":
+                    plt.title(args.title)
+
+                # Create the legend
+                plt.legend(loc="lower right")
+                plt.xlabel("# Target predictions per sRNA")
+                plt.ylabel("# True positive")
+
+                # Handle user input for the x and y limits
+                if args.xlim != "" and "/" in args.xlim:
+                    plt.xlim(int(args.xlim.split("/")[0]), int(args.xlim.split("/")[1]))
+                if args.ylim != "" and "/" in args.ylim:
+                    plt.ylim(int(args.ylim.split("/")[0]), int(args.ylim.split("/")[1]))
+
+                plt.savefig(args.outFile)
+                plt.close()
+
+        elif args.plotType == "violin":
+
+            if args.fixedID == "":
+                sys.exit("Please provide a reference curve with --fixedID=<callID> to compute the violin plot.")
+
+            refData = rankDictionary[args.fixedID]
+            rankDictionary.pop(args.fixedID, None)
+
             keys = list(rankDictionary.keys())
             human_sort(keys)
-            # If fixedID is given plot it in red
-            if args.fixedID != "":
-                if args.fixedID in keys:
-                    keys.remove(args.fixedID)
-                    plt.plot(rankDictionary[args.fixedID], label=args.fixedID, color="red", zorder=30)
-                else:
-                    print("Given callID is not flagged for plotting. Proceeding...")
 
-            linecycler = cycle(lineList)
-            # Plot all wanted callIDs
+            data = []
             for key in keys:
-                if not args.lines:
-                    if (len(keys) > 17):
-                        plt.plot(rankDictionary[key], label=key)
-                    else:
-                        plt.plot(rankDictionary[key], label=key, color=colorList.pop())
-                else:
-                    if (len(keys) > 17):
-                        plt.plot(rankDictionary[key], label=key, linestyle=next(linecycler))
-                    else:
-                        plt.plot(rankDictionary[key], label=key, color=colorList.pop(), linestyle=next(linecycler))
+                data.append(list(map(operator.sub, rankDictionary[key], refData)))
+
+            parts = plt.violinplot(data, showextrema=True, showmeans=True, showmedians=True)
+            for idx, pc in enumerate(parts['bodies']):
+                pc.set_facecolor(colorList[::-1][idx])
+                pc.set_edgecolor('black')
+                pc.set_alpha(1)
 
             # Set the title, if given
             if args.title != "":
                 plt.title(args.title)
 
             # Create the legend
-            plt.legend(loc="lower right")
-            plt.xlabel("# Target predictions per sRNA")
-            plt.ylabel("# True positive")
-
-            # Handle user input for the x and y limits
-            if args.xlim != "" and "/" in args.xlim:
-                plt.xlim(int(args.xlim.split("/")[0]), int(args.xlim.split("/")[1]))
-            if args.ylim != "" and "/" in args.ylim:
-                plt.ylim(int(args.ylim.split("/")[0]), int(args.ylim.split("/")[1]))
+            # plt.legend(loc="lower right")
+            # plt.xlabel("# Target predictions per sRNA")
+            # plt.ylabel("# True positive")
 
             plt.savefig(args.outFile)
             plt.close()
+        else:
+            sys.exit("Please specify a plot type: -p<'roc' / 'violin'>")
 
     else:
         sys.exit("Could not find %s!" % args.benchmarkFile)

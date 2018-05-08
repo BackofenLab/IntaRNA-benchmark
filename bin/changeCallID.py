@@ -24,6 +24,10 @@ def main(argv):
     if args.newName == "":
         sys.exit("No name was specified! Please specify a name using -c <name> or --callID=<name>")
 
+    # Check if not trying to overwrite
+    if os.path.exists(os.path.join(args.outDir,args.newName)):
+        sys.exit("Target name already exists, please use a unique name.")
+
     # Check whether directory path exists
     if not os.path.exists(os.path.join(args.outDir, args.callID)):
         sys.exit("Error!!! FilePath does not exist! Please specify it using -o <outDir>!")
