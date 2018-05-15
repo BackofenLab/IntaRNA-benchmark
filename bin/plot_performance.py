@@ -7,6 +7,7 @@ import pandas as pd
 import matplotlib
 import re
 import operator
+import numpy as np
 
 matplotlib.use('Agg')
 from itertools import cycle
@@ -40,6 +41,13 @@ def alphanumeric_key(s):
 def human_sort(l):
     l.sort(key=alphanumeric_key)
 
+# set axis
+def set_axis_style(ax, labels):
+    ax.get_xaxis().set_tick_params(direction='out')
+    # ax.xaxis.set_ticks_position('bottom')
+    ax.set_xticks(np.arange(1, len(labels) + 1))
+    ax.set_xticklabels(labels)
+    #ax.set_xlim(0.25, len(labels) + 0.75)
 
 def main(argv):
     parser = argparse.ArgumentParser(description="Script for plotting the benchmark results")
@@ -62,7 +70,11 @@ def main(argv):
     parser.add_argument("--lines", action="store_true", dest="lines", default=False
                         , help="use different line types, evenly distributed")
     parser.add_argument("-p", "--plotType", action="store", dest="plotType", default="roc"
-                        , help="Decide whether to use ROC or Violin plots.")
+                        , help="Decide whether to use ROC or Violin plots. Plots can also be merged with 'merged' keyword")
+    parser.add_argument("-a", "--additional", action="store_true", dest="additional", default=False
+                        , help="Create additional plots for the time and memory consumption.")
+    parser.add_argument("-r", "--rotation", action="store", dest="rotation", default=0
+                        , help="The rotation of the xticks.")
     args = parser.parse_args()
 
     if args.benchmarkFile == "":
@@ -73,8 +85,6 @@ def main(argv):
         benchDF = pd.read_csv(args.benchmarkFile, sep=args.separator, header=0)
         prefix = ["srna_name", "target_ltag", "target_name"]
         intarnaIDs = [x.replace("_intarna_rank", "") for x in benchDF.columns if x not in prefix]
-        print(intarnaIDs)
-
 
         rankDictionary = dict()
         # Init dictionary
@@ -134,7 +144,6 @@ def main(argv):
                 plt.close()
 
         elif args.plotType == "violin":
-
             if args.fixedID == "":
                 sys.exit("Please provide a reference curve with --fixedID=<callID> to compute the violin plot.")
 
@@ -144,32 +153,243 @@ def main(argv):
             keys = list(rankDictionary.keys())
             human_sort(keys)
 
+            fig, ax = plt.subplots(nrows=1, ncols=1)
+
             data = []
             for key in keys:
                 data.append(list(map(operator.sub, rankDictionary[key], refData)))
 
-            parts = plt.violinplot(data, showextrema=True, showmeans=True, showmedians=True)
-            for idx, pc in enumerate(parts['bodies']):
+            violin_parts = ax.violinplot(data, showextrema=True, showmeans=True, showmedians=True)
+            for idx, pc in enumerate(violin_parts['bodies']):
                 pc.set_facecolor(colorList[::-1][idx])
                 pc.set_edgecolor('black')
                 pc.set_alpha(1)
+
+            for part in ("cbars", "cmins", "cmaxes", "cmeans"):
+                vp = violin_parts[part]
+                vp.set_edgecolor('black')
+
+            vp = violin_parts["cmedians"]
+            vp.set_edgecolor("black")
+            vp.set_linestyle("--")
 
             # Set the title, if given
             if args.title != "":
                 plt.title(args.title)
 
+            # set_axis_style(ax, keys)
+
             # Create the legend
             # plt.legend(loc="lower right")
             # plt.xlabel("# Target predictions per sRNA")
-            # plt.ylabel("# True positive")
+            plt.ylabel("difference measure")
 
+            # plt.xticks(rotation=15)
+            plt.xticks([])
+            plt.tight_layout()
+            plt.axhline(y=0, color="red", linestyle="-", zorder=0)
             plt.savefig(args.outFile)
             plt.close()
+        elif args.plotType == "merged":
+            if args.fixedID == "":
+                sys.exit("Please provide a reference curve with --fixedID=<callID> to compute the violin plot.")
+
+
+            linecycler = cycle(lineList)
+            colorcycler = cycle(colorList[::-1])
+            keys = list(rankDictionary.keys())
+            human_sort(keys)
+
+            # Create a subplot
+            fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(14,6))
+
+            # PLOT 1 (ROC)
+            for key in keys:
+                if key == args.fixedID:
+                    ax1.plot(rankDictionary[args.fixedID], label=args.fixedID, color="red", zorder=30)
+                    continue
+
+                if not args.lines:
+                    ax1.plot(rankDictionary[key], label=key, color=next(colorcycler))
+                else:
+                    ax1.plot(rankDictionary[key], label=key, color=next(colorcycler), linestyle=next(linecycler))
+
+            # Create the legend
+            ax1.legend(loc="lower right")
+            ax1.axes.set_xlabel("# Target predictions per sRNA")
+            ax1.axes.set_ylabel("# True positive")
+
+            # Handle user input for the x and y limits
+            if args.xlim != "" and "/" in args.xlim:
+                ax1.xlim(int(args.xlim.split("/")[0]), int(args.xlim.split("/")[1]))
+            if args.ylim != "" and "/" in args.ylim:
+                ax1.ylim(int(args.ylim.split("/")[0]), int(args.ylim.split("/")[1]))
+
+
+            # Data preparations
+            refData = rankDictionary[args.fixedID]
+            rankDictionary.pop(args.fixedID, None)
+
+            # Keys without reference key
+            keys = list(rankDictionary.keys())
+            human_sort(keys)
+
+            violinData = []
+            for key in keys:
+                violinData.append(list(map(operator.sub, rankDictionary[key], refData)))
+
+            violin_parts = ax2.violinplot(violinData, showextrema=True, showmeans=True, showmedians=True)
+            for idx, pc in enumerate(violin_parts['bodies']):
+                pc.set_facecolor(colorList[::-1][idx])
+                pc.set_edgecolor('black')
+                pc.set_alpha(1)
+
+            for part in ("cbars", "cmins", "cmaxes", "cmeans"):
+                vp = violin_parts[part]
+                vp.set_edgecolor('black')
+
+            vp = violin_parts["cmedians"]
+            vp.set_edgecolor("black")
+            vp.set_linestyle("--")
+
+            ax2.axes.set_ylabel("difference measure")
+            ax2.axes.yaxis.set_label_position("right")
+            ax2.axes.yaxis.set_ticks_position("right")
+            ax2.axes.set_xticks([])
+
+            ax2.axhline(y=0, color="red", linestyle="-", zorder=0)
+
+            # Set the title, if given
+            if args.title != "":
+                plt.suptitle(args.title, fontsize=15)
+
+            plt.tight_layout(rect=[0,0.03,1,0.95])
+            plt.savefig(args.outFile)
+            plt.close()
+
         else:
-            sys.exit("Please specify a plot type: -p<'roc' / 'violin'>")
+            sys.exit("Please specify a plot type: -p<'roc' / 'violin' / 'merged'>")
+
+        # Time and Memory plots
+        if (args.additional):
+            runTimeFile = os.path.splitext(args.benchmarkFile)[0] + "_runTimes.csv"
+            memoryFile = os.path.splitext(args.benchmarkFile)[0] + "_MaxMemoryUsage.csv"
+
+            if not os.path.exists(runTimeFile):
+                sys.exit("no runTimeFile found!!")
+            if not os.path.exists(memoryFile):
+                sys.exit("no MaxMemoryUsage file found!!")
+
+            timeDF = pd.read_csv(runTimeFile, sep=args.separator, header=0)
+            memoryDF = pd.read_csv(memoryFile, sep=args.separator, header=0)
+
+            human_sort(intarnaIDs)
+
+            prefix = ["srna_name", "target_ltag", "target_name"]
+            intarnaIDs = [x.replace("_intarna_rank", "") for x in benchDF.columns if x not in prefix]
+
+            # Create a subplot
+            fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(14,6))
+
+            # Time
+            timeDict = dict()
+            for id in intarnaIDs:
+                timeDict[id] = []
+
+            for row in timeDF.iterrows():
+                index, data = row
+                timeDict[timeDF.get_value(index, "callID")] += data.tolist()[3:]
+
+            keys = list(timeDict.keys())
+            human_sort(keys)
+
+            timeData = []
+            keys.remove(args.fixedID)
+            for key in keys:
+                timeData.append(timeDict[key])
+
+            timeData = [timeDict[args.fixedID]] + timeData
+            # Convert time from sec to min
+            timeData = [[y/60 for y in x] for x in timeData]
+            colorList.append("red")
+
+            violin_parts = ax1.violinplot(timeData, showextrema=True, showmeans=True, showmedians=True)
+            for idx, pc in enumerate(violin_parts['bodies']):
+                pc.set_facecolor(colorList[::-1][idx])
+                pc.set_edgecolor('black')
+                pc.set_alpha(1)
+
+            for part in ("cbars", "cmins", "cmaxes", "cmeans"):
+                vp = violin_parts[part]
+                vp.set_edgecolor('black')
+
+            vp = violin_parts["cmedians"]
+            vp.set_edgecolor("black")
+            vp.set_linestyle("--")
+
+            ax1.axes.set_ylabel("time (in minutes)")
+            ax1.axes.set_xticks([])
+
+
+            # Memory
+            memoryDict = dict()
+            for id in intarnaIDs:
+                memoryDict[id] = []
+
+            for row in memoryDF.iterrows():
+                index, data = row
+                memoryDict[memoryDF.get_value(index, "callID")] += data.tolist()[3:]
+
+            keys = list(memoryDict.keys())
+            human_sort(keys)
+
+            memoryData = []
+            keys.remove(args.fixedID)
+            for key in keys:
+                memoryData.append(memoryDict[key])
+
+            memoryData = [memoryDict[args.fixedID]] + memoryData
+
+            violin_parts = ax2.violinplot(memoryData, showextrema=True, showmeans=True, showmedians=True)
+            for idx, pc in enumerate(violin_parts['bodies']):
+                pc.set_facecolor(colorList[::-1][idx])
+                pc.set_edgecolor('black')
+                pc.set_alpha(1)
+
+            for part in ("cbars", "cmins", "cmaxes", "cmeans"):
+                vp = violin_parts[part]
+                vp.set_edgecolor('black')
+
+            vp = violin_parts["cmedians"]
+            vp.set_edgecolor("black")
+            vp.set_linestyle("--")
+
+            ax2.axes.set_ylabel("memory (in megabytes)")
+            ax2.axes.yaxis.set_label_position("right")
+            ax2.axes.yaxis.set_ticks_position("right")
+            ax2.axes.set_xticks([])
+
+            keys = [args.fixedID] + keys
+
+            set_axis_style(ax1, keys)
+            set_axis_style(ax2, keys)
+
+            plt.suptitle("Time and memory consumption", fontsize=15)
+            # plt.legend(handles=ax2, labels=keys)
+            # print(handles, labels)
+            for tick in ax1.get_xticklabels():
+                tick.set_rotation(args.rotation)
+            for tick in ax2.get_xticklabels():
+                tick.set_rotation(args.rotation)
+
+            plt.tight_layout(rect=[0,0.03,1,0.95])
+            plt.show()
+            plt.savefig(os.path.splitext(args.outFile)[0] + "_info.pdf")
+            plt.close()
 
     else:
         sys.exit("Could not find %s!" % args.benchmarkFile)
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])
