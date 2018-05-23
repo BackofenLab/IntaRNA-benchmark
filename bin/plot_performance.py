@@ -46,7 +46,7 @@ def set_axis_style(ax, labels):
     ax.get_xaxis().set_tick_params(direction='out')
     # ax.xaxis.set_ticks_position('bottom')
     ax.set_xticks(np.arange(1, len(labels) + 1))
-    ax.set_xticklabels(labels)
+    ax.set_xticklabels(labels, fontsize=12)
     #ax.set_xlim(0.25, len(labels) + 0.75)
 
 def main(argv):
@@ -75,6 +75,9 @@ def main(argv):
                         , help="Create additional plots for the time and memory consumption.")
     parser.add_argument("-r", "--rotation", action="store", dest="rotation", default=0
                         , help="The rotation of the xticks.")
+    parser.add_argument("--lsize", action="store", dest="legendSize", default=14
+                        , help="The fontsize of the legend.")
+
     args = parser.parse_args()
 
     if args.benchmarkFile == "":
@@ -130,7 +133,7 @@ def main(argv):
                     plt.title(args.title)
 
                 # Create the legend
-                plt.legend(loc="lower right")
+                plt.legend(loc="lower right", fontsize=args.legendSize)
                 plt.xlabel("# Target predictions per sRNA")
                 plt.ylabel("# True positive")
 
@@ -215,17 +218,17 @@ def main(argv):
                     ax1.plot(rankDictionary[key], label=key, color=next(colorcycler), linestyle=next(linecycler))
 
             # Create the legend
-            ax1.legend(loc="lower right")
-            ax1.axes.set_xlabel("# Target predictions per sRNA")
-            ax1.axes.set_ylabel("# True positive")
+            ax1.legend(loc="lower right", fontsize=args.legendSize)
+            ax1.axes.set_xlabel("# Target predictions per sRNA", fontsize=16)
+            ax1.axes.set_ylabel("# True positive", fontsize=16)
 
             # Handle user input for the x and y limits
             if args.xlim != "" and "/" in args.xlim:
-                ax1.xlim(int(args.xlim.split("/")[0]), int(args.xlim.split("/")[1]))
+                ax1.axes.set_xlim(int(args.xlim.split("/")[0]), int(args.xlim.split("/")[1]))
             if args.ylim != "" and "/" in args.ylim:
-                ax1.ylim(int(args.ylim.split("/")[0]), int(args.ylim.split("/")[1]))
+                ax1.axes.set_ylim(ymax=int(args.ylim.split("/")[1]))
 
-
+            # ax1.axes.set_xscale("log")
             # Data preparations
             refData = rankDictionary[args.fixedID]
             rankDictionary.pop(args.fixedID, None)
@@ -252,7 +255,7 @@ def main(argv):
             vp.set_edgecolor("black")
             vp.set_linestyle("--")
 
-            ax2.axes.set_ylabel("difference measure")
+            ax2.axes.set_ylabel("difference measure", fontsize=16)
             ax2.axes.yaxis.set_label_position("right")
             ax2.axes.yaxis.set_ticks_position("right")
             ax2.axes.set_xticks([])
@@ -261,7 +264,7 @@ def main(argv):
 
             # Set the title, if given
             if args.title != "":
-                plt.suptitle(args.title, fontsize=15)
+                plt.suptitle(args.title, fontsize=20)
 
             plt.tight_layout(rect=[0,0.03,1,0.95])
             plt.savefig(args.outFile)
@@ -304,14 +307,18 @@ def main(argv):
             human_sort(keys)
 
             timeData = []
-            keys.remove(args.fixedID)
+            if args.fixedID != "":
+                keys.remove(args.fixedID)
             for key in keys:
                 timeData.append(timeDict[key])
 
-            timeData = [timeDict[args.fixedID]] + timeData
+            if args.fixedID != "":
+                timeData = [timeDict[args.fixedID]] + timeData
+
             # Convert time from sec to min
             timeData = [[y/60 for y in x] for x in timeData]
-            colorList.append("red")
+            if args.fixedID != "":
+                colorList.append("red")
 
             violin_parts = ax1.violinplot(timeData, showextrema=True, showmeans=True, showmedians=True)
             for idx, pc in enumerate(violin_parts['bodies']):
@@ -327,7 +334,7 @@ def main(argv):
             vp.set_edgecolor("black")
             vp.set_linestyle("--")
 
-            ax1.axes.set_ylabel("time (in minutes)")
+            ax1.axes.set_ylabel("time (in minutes)", fontsize=16)
             ax1.axes.set_xticks([])
 
 
@@ -344,11 +351,12 @@ def main(argv):
             human_sort(keys)
 
             memoryData = []
-            keys.remove(args.fixedID)
+            if args.fixedID != "":
+                keys.remove(args.fixedID)
             for key in keys:
                 memoryData.append(memoryDict[key])
-
-            memoryData = [memoryDict[args.fixedID]] + memoryData
+            if args.fixedID != "":
+                memoryData = [memoryDict[args.fixedID]] + memoryData
 
             violin_parts = ax2.violinplot(memoryData, showextrema=True, showmeans=True, showmedians=True)
             for idx, pc in enumerate(violin_parts['bodies']):
@@ -364,17 +372,18 @@ def main(argv):
             vp.set_edgecolor("black")
             vp.set_linestyle("--")
 
-            ax2.axes.set_ylabel("memory (in megabytes)")
+            ax2.axes.set_ylabel("memory (in megabytes)", fontsize=16)
             ax2.axes.yaxis.set_label_position("right")
             ax2.axes.yaxis.set_ticks_position("right")
             ax2.axes.set_xticks([])
 
-            keys = [args.fixedID] + keys
+            if args.fixedID != "":
+                keys = [args.fixedID] + keys
 
             set_axis_style(ax1, keys)
             set_axis_style(ax2, keys)
 
-            plt.suptitle("Time and memory consumption", fontsize=15)
+            plt.suptitle("Time and memory consumption", fontsize=20)
             # plt.legend(handles=ax2, labels=keys)
             # print(handles, labels)
             for tick in ax1.get_xticklabels():
