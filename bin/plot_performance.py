@@ -281,7 +281,7 @@ def main(argv):
             if not os.path.exists(runTimeFile):
                 sys.exit("no runTimeFile found!!")
             if not os.path.exists(memoryFile):
-                sys.exit("no MaxMemoryUsage file found!!")
+                sys.exit("no maxMemoryUsage file found!!")
 
             timeDF = pd.read_csv(runTimeFile, sep=args.separator, header=0)
             memoryDF = pd.read_csv(memoryFile, sep=args.separator, header=0)

@@ -101,6 +101,7 @@ __Parameters:__
 * __xlim (`-x`)__ specify an x-limit for the output. x_start/x_end (x is already bound by end, changing might lead to strange results)
 * __ylim (`-y`)__ specify an y-limit for the output. y_start/y_end
 
+__Under Construction: use plot_boxes__
 This script uses a benchmark.csv file created by the `benchmark.py` script.
 For each callID present in the benchmark file, the ranks are used to create a receiver operating characteristic (ROC) curve.
 For each step from 1 to "end(200)" the number of ranks that are smaller or equal to the current step are recorded. 
@@ -108,6 +109,24 @@ These are the desired true positives.
 
 __Default Output:__
 * IntaRNA2_benchmark.pdf -> a pdf of a roc plot for all contained callIDs
+
+#### plot_boxes.py
+
+__Parameters:__
+* __benchmarkFile (`-i`)__ mandatory benchmark file used to plot the results. (created using benchmark.py eventually in compination with mergeBenchmarks.py)
+* __outputFilePath (`-o`)__ the location and name of the output file. Default: IntaRNA2_benchmark.pdf .
+* __separator (`-s`)__ separator used for the csv files. Default: '__;__'
+* __title (`-t`)__ title for the plot
+* __rankThreshold (`-r`)__ thresholds for which the boxplots are created. Default: 5 10 50 100 200
+* __fixedID (`-f`)__ the callID for the reference curve (needed for the boxplots)
+
+This script uses a benchmark.csv file created by the `benchmark.py` script.
+For each callID present in the benchmark file, the ranks are used to create a receiver operating characteristic (ROC) curve.
+The data plotted is the number of ranks smaller or equal to the currently allowed target predictions. [0-max(threshold)]
+The data from the ROC curve is used to create a difference measure between each curve and the reference curve (defined by fixedID).
+This is visualized using boxplots for different target prediction thresholds (user-defineable).
+The upper bound of the x-axis is taken from the thresholds. Default: 200.
+
 
 #### mergeBenchmarks.py
 

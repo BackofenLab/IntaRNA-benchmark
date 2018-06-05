@@ -142,34 +142,86 @@ def main(argv):
     sRNAfiles = [x for x in sRNAfiles if "memoryUsage" not in x and "runTime" not in x and ".txt" not in x and "benchmark" not in x]
 
     numberOfStackingsList = []
+    maxLengthList = []
+    helixLengthList = []
     for sRNA in sRNAfiles:
         try:
             df = pd.read_csv(sRNA, sep=";")
         except:
             continue
 
-        helixData = df["hybridDP"].tolist()
+        helixData = df["hybridDP"].tolist()[:200]
+
+        interactionLengthList = []
 
         for helix in helixData:
-            numberOfStackingsList.append(len(retrieve_stackingInformation(createBPList(helix, ["()"]), helix)[0]))
+            lengths = retrieve_stackingInformation(createBPList(helix, ["()"]), helix)[0]
+            numberOfStackingsList.append(len(lengths))
 
-    plt.hist(numberOfStackingsList, bins=max(set(numberOfStackingsList))-1)
+            helixLengthList += lengths
+            splitInteraction = helix.split("&")
+            interactionLengthList.append(max(len(splitInteraction[0]), len(splitInteraction[1])))
 
-    #print(max(set(numberOfStackingsList)))
+        maxLengthList += interactionLengthList
+
+    # NUMBER
+    plt.hist(numberOfStackingsList,bins=[x for x in range(2, max(numberOfStackingsList), 1)])
+
     plt.ylabel("Count")
     plt.xlabel("# Helices")
     plt.title("Number of helices predicted per interaction", fontsize=10)
 
     plt.yscale("log", nonposy="clip")
 
-    plt.ylim(ymax=120000)
-    plt.xlim(xmax=30)
+    plt.ylim(ymax=12000)
+    plt.xlim(xmax=25)
 
     plt.tight_layout()
 
-    plt.savefig(args.outPath)
-    plt.show()
+    plt.savefig(args.outPath + "_number.pdf")
+    plt.close()
 
+
+
+
+    # LENGHTS
+    helixLengthList = [x for x in helixLengthList if x < 40]
+    plt.hist(helixLengthList)
+
+    plt.ylabel("Count")
+    plt.xlabel("Number of helices")
+    plt.title("Distribution of helix lengths", fontsize=10)
+
+    # plt.yscale("log", nonposy="clip")
+
+    plt.ylim(ymax=6000)
+    # plt.xlim(xmax=20)
+
+    plt.tight_layout()
+
+    plt.savefig(args.outPath+ "_lengths.pdf")
+    plt.close()
+
+
+
+
+    # INTERACTION
+    plt.hist(maxLengthList, bins=[x for x in range(0, 140, 5)])
+
+    # print(interactionLengthList)
+    plt.ylabel("Count")
+    plt.xlabel("Interaction lengths")
+    plt.title("Distribution of maximum interaction lengths", fontsize=10)
+
+    plt.yscale("log", nonposy="clip")
+    #
+    plt.ylim(ymax=6000)
+    plt.xlim(xmax=160)
+
+    plt.tight_layout()
+
+    plt.savefig(args.outPath +"_interaction.pdf")
+    plt.close()
 
 if __name__ == "__main__":
     main(sys.argv[1:])
