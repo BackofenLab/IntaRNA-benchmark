@@ -21,8 +21,8 @@ import matplotlib.pyplot as plt
 ########################################################################################################################
 
 # List of easily differentiable color codes
-colorList = ['#f032e6', '#808080', '#000080', '#808000', '#aaffc3', '#800000', '#aa6e28', '#e6beff', '#008080',
-             '#fabebe', '#d2f53c', '#46f0f0', '#911eb4', '#f58231', '#0082c8', '#ffe119', '#3cb44b']
+colorList = ['#f032e6', '#808080', '#000080', '#808000', '#aaffc3', '#ffe119', '#800000', '#aa6e28', '#e6beff', '#008080',
+             '#fabebe', '#d2f53c', '#46f0f0', '#911eb4', '#f58231', '#0082c8', '#3cb44b']
 
 lineList = ["--", "-"]
 
@@ -69,14 +69,16 @@ def main(argv):
                         , help="the title of the plot.")
     parser.add_argument("--lines", action="store_true", dest="lines", default=False
                         , help="use different line types, evenly distributed")
-    parser.add_argument("-p", "--plotType", action="store", dest="plotType", default="roc"
-                        , help="Decide whether to use ROC or Violin plots. Plots can also be merged with 'merged' keyword")
+    parser.add_argument("-p", "--plotType", action="store", dest="plotType", default="merged"
+                        , help="Decide whether to use merged or single plots")
     parser.add_argument("-a", "--additional", action="store_true", dest="additional", default=False
                         , help="Create additional plots for the time and memory consumption.")
     parser.add_argument("-r", "--rotation", action="store", dest="rotation", default=0
                         , help="The rotation of the xticks.")
     parser.add_argument("--lsize", action="store", dest="legendSize", default=14
                         , help="The fontsize of the legend.")
+    parser.add_argument("--time", action="store_true", dest="time", default=False
+                        , help="plot only the time")
 
     args = parser.parse_args()
 
@@ -100,53 +102,47 @@ def main(argv):
                 rankDictionary[id].append(len(benchDF[benchDF[id+"_intarna_rank"] <= i]))
 
         # plot type roc
-        if args.plotType == "roc":
-            # Plot the data
-            if bool(rankDictionary):
-                # Plot the data
-                keys = list(rankDictionary.keys())
-                human_sort(keys)
+        if args.plotType == "split":
 
-                linecycler = cycle(lineList)
-                # Plot all wanted callIDs
-                for key in keys:
-                    # If fixedID is given plot it in red
-                    if args.fixedID != "":
-                        if key == args.fixedID:
-                            plt.plot(rankDictionary[args.fixedID], label=args.fixedID, color="red", zorder=30)
-                            continue
+            linecycler = cycle(lineList)
+            colorcycler = cycle(colorList[::-1])
+            keys = list(rankDictionary.keys())
+            human_sort(keys)
 
-                    # Plot rest
-                    if not args.lines:
-                        if (len(keys) > 17):
-                            plt.plot(rankDictionary[key], label=key)
-                        else:
-                            plt.plot(rankDictionary[key], label=key, color=colorList.pop())
-                    else:
-                        if (len(keys) > 17):
-                            plt.plot(rankDictionary[key], label=key, linestyle=next(linecycler))
-                        else:
-                            plt.plot(rankDictionary[key], label=key, color=colorList.pop(), linestyle=next(linecycler))
+            fig, ax = plt.subplots(nrows=1, ncols=1)
 
-                # Set the title, if given
-                if args.title != "":
-                    plt.title(args.title)
+            # Plot all wanted callIDs
+            for key in keys:
+                # If fixedID is given plot it in red
+                if args.fixedID != "":
+                    if key == args.fixedID:
+                        ax.plot(rankDictionary[args.fixedID], label=args.fixedID, color="red", zorder=30)
+                        continue
 
-                # Create the legend
-                plt.legend(loc="lower right", fontsize=args.legendSize)
-                plt.xlabel("# Target predictions per sRNA")
-                plt.ylabel("# True positive")
+                # Plot rest
+                if not args.lines:
+                    ax.plot(rankDictionary[key], label=key, color=next(colorcycler))
+                else:
+                    ax.plot(rankDictionary[key], label=key, color=next(colorcycler), linestyle=next(linecycler))
 
-                # Handle user input for the x and y limits
-                if args.xlim != "" and "/" in args.xlim:
-                    plt.xlim(int(args.xlim.split("/")[0]), int(args.xlim.split("/")[1]))
-                if args.ylim != "" and "/" in args.ylim:
-                    plt.ylim(int(args.ylim.split("/")[0]), int(args.ylim.split("/")[1]))
+            # Set the title, if given
+            if args.title != "":
+                plt.title(args.title)
 
-                plt.savefig(args.outFile)
-                plt.close()
+            # Create the legend
+            plt.legend(loc="lower right", fontsize=args.legendSize)
+            plt.xlabel("# Target predictions per sRNA", fontsize=16)
+            plt.ylabel("# True positive", fontsize=16)
 
-        elif args.plotType == "violin":
+            # Handle user input for the x and y limits
+            if args.xlim != "" and "/" in args.xlim:
+                ax.axes.set_xlim(int(args.xlim.split("/")[0]), int(args.xlim.split("/")[1]))
+            if args.ylim != "" and "/" in args.ylim:
+                ax.axes.set_ylim(ymax=int(args.ylim.split("/")[1]))
+
+            plt.savefig(args.outFile.replace(".pdf", "") + "_roc.pdf")
+
+
             if args.fixedID == "":
                 sys.exit("Please provide a reference curve with --fixedID=<callID> to compute the violin plot.")
 
@@ -176,22 +172,19 @@ def main(argv):
             vp.set_edgecolor("black")
             vp.set_linestyle("--")
 
-            # Set the title, if given
-            if args.title != "":
-                plt.title(args.title)
 
-            # set_axis_style(ax, keys)
+            set_axis_style(ax, keys)
 
-            # Create the legend
-            # plt.legend(loc="lower right")
-            # plt.xlabel("# Target predictions per sRNA")
-            plt.ylabel("difference measure")
+            for tick in ax.get_xticklabels():
+                tick.set_rotation(args.rotation)
+
+            ax.axes.set_ylim( ymin=-33, ymax=20)
+            plt.ylabel("true positive deviation", fontsize=16)
 
             # plt.xticks(rotation=15)
-            plt.xticks([])
             plt.tight_layout()
             plt.axhline(y=0, color="red", linestyle="-", zorder=0)
-            plt.savefig(args.outFile)
+            plt.savefig(args.outFile.replace(".pdf","") + "_violin.pdf")
             plt.close()
         elif args.plotType == "merged":
             if args.fixedID == "":
@@ -255,7 +248,7 @@ def main(argv):
             vp.set_edgecolor("black")
             vp.set_linestyle("--")
 
-            ax2.axes.set_ylabel("difference measure", fontsize=16)
+            ax2.axes.set_ylabel("true positive deviation", fontsize=16)
             ax2.axes.yaxis.set_label_position("right")
             ax2.axes.yaxis.set_ticks_position("right")
             ax2.axes.set_xticks([])
@@ -394,6 +387,78 @@ def main(argv):
             plt.tight_layout(rect=[0,0.03,1,0.95])
             plt.show()
             plt.savefig(os.path.splitext(args.outFile)[0] + "_info.pdf")
+            plt.close()
+
+
+        if args.time:
+            runTimeFile = os.path.splitext(args.benchmarkFile)[0] + "_runTimes.csv"
+
+            if not os.path.exists(runTimeFile):
+                sys.exit("no runTimeFile found!!")
+
+            timeDF = pd.read_csv(runTimeFile, sep=args.separator, header=0)
+
+            human_sort(intarnaIDs)
+
+            prefix = ["srna_name", "target_ltag", "target_name"]
+            intarnaIDs = [x.replace("_intarna_rank", "") for x in benchDF.columns if x not in prefix]
+
+            # Time
+            timeDict = dict()
+            for id in intarnaIDs:
+                timeDict[id] = []
+
+            for row in timeDF.iterrows():
+                index, data = row
+                timeDict[timeDF.get_value(index, "callID")] += data.tolist()[3:]
+
+            keys = list(timeDict.keys())
+            human_sort(keys)
+
+            timeData = []
+            if args.fixedID != "":
+                keys.remove(args.fixedID)
+            for key in keys:
+                timeData.append(timeDict[key])
+
+            if args.fixedID != "":
+                timeData = [timeDict[args.fixedID]] + timeData
+
+            # Convert time from sec to min
+            timeData = [[y / 60 for y in x] for x in timeData]
+            if args.fixedID != "":
+                colorList.append("red")
+
+            fig, ax = plt.subplots(nrows=1, ncols=1)
+
+            violin_parts = ax.violinplot(timeData, showextrema=True, showmeans=True, showmedians=True)
+            for idx, pc in enumerate(violin_parts['bodies']):
+                pc.set_facecolor(colorList[::-1][idx])
+                pc.set_edgecolor('black')
+                pc.set_alpha(1)
+
+            for part in ("cbars", "cmins", "cmaxes", "cmeans"):
+                vp = violin_parts[part]
+                vp.set_edgecolor('black')
+
+            vp = violin_parts["cmedians"]
+            vp.set_edgecolor("black")
+            vp.set_linestyle("--")
+
+            if args.fixedID != "":
+                keys = [args.fixedID] + keys
+
+            set_axis_style(ax, keys)
+
+            ax.set_ylabel("time (in minutes)", fontsize=16)
+            ax.axes.yaxis.set_label_position("right")
+
+            for tick in ax.get_xticklabels():
+                tick.set_rotation(args.rotation)
+
+            plt.tight_layout()
+            plt.show()
+            plt.savefig(os.path.splitext(args.outFile)[0] + "_time.pdf")
             plt.close()
 
     else:

@@ -61,9 +61,12 @@ def main(argv):
                         , help="the title of the plot.")
     parser.add_argument("-r", "--rankThreshold", action="store", dest="ranks", nargs="+", type=int
                         , default=[5,10,50,100,200], help="list of thresholds for the violin plots.")
+    parser.add_argument("-y", "--ymax", action="store", dest="ymax", default=0, type=int
+                        , help="set the maximum value of the y-axis to make all plots comparable.")
     parser.add_argument("--sep", action="store", dest="separator", default=";"
                         , help="the separator used in the benchmarkFile")
-
+    parser.add_argument("--info", action="store_true", dest="info", default=False
+                        , help="create time and memory plots.")
     args = parser.parse_args()
 
     # if Benchmark file exists plot the data
@@ -102,6 +105,10 @@ def main(argv):
                 continue
 
             ax1.plot(rankDictionary[key], label=key, color=next(colorcycler))
+
+        # set ymax if defined
+        if args.ymax != 0:
+            ax1.axes.set_ylim(ymax=args.ymax)
 
         # Create the legend
         ax1.legend(loc="lower right", fontsize=14)
@@ -154,6 +161,129 @@ def main(argv):
 
     else:
         sys.exit("No valid benchmark file given!!!")
+
+
+    # Time and Memory plots
+    if (args.info):
+        runTimeFile = os.path.splitext(args.benchmarkFile)[0] + "_runTimes.csv"
+        memoryFile = os.path.splitext(args.benchmarkFile)[0] + "_MaxMemoryUsage.csv"
+
+        if not os.path.exists(runTimeFile):
+            sys.exit("no runTimeFile found!!")
+        if not os.path.exists(memoryFile):
+            sys.exit("no maxMemoryUsage file found!!")
+
+        timeDF = pd.read_csv(runTimeFile, sep=args.separator, header=0)
+        memoryDF = pd.read_csv(memoryFile, sep=args.separator, header=0)
+
+        human_sort(intarnaIDs)
+
+        prefix = ["srna_name", "target_ltag", "target_name"]
+        intarnaIDs = [x.replace("_intarna_rank", "") for x in benchDF.columns if x not in prefix]
+
+        # Create a subplot
+        fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(14,6))
+
+        # Time
+        timeDict = dict()
+        for id in intarnaIDs:
+            timeDict[id] = []
+
+        for row in timeDF.iterrows():
+            index, data = row
+            timeDict[timeDF.get_value(index, "callID")] += data.tolist()[3:]
+
+        keys = list(timeDict.keys())
+        human_sort(keys)
+
+        timeData = []
+        if args.fixedID != "":
+            keys.remove(args.fixedID)
+        for key in keys:
+            timeData.append(timeDict[key])
+
+        if args.fixedID != "":
+            timeData = [timeDict[args.fixedID]] + timeData
+
+        # Convert time from sec to min
+        timeData = [[y/60 for y in x] for x in timeData]
+        if args.fixedID != "":
+            colorList.append("red")
+
+        violin_parts = ax1.violinplot(timeData, showextrema=True, showmeans=True, showmedians=True)
+        for idx, pc in enumerate(violin_parts['bodies']):
+            pc.set_facecolor(colorList[::-1][idx])
+            pc.set_edgecolor('black')
+            pc.set_alpha(1)
+
+        for part in ("cbars", "cmins", "cmaxes", "cmeans"):
+            vp = violin_parts[part]
+            vp.set_edgecolor('black')
+
+        vp = violin_parts["cmedians"]
+        vp.set_edgecolor("black")
+        vp.set_linestyle("--")
+
+        ax1.axes.set_ylabel("time (in minutes)", fontsize=16)
+        ax1.axes.set_xticks([])
+
+
+        # Memory
+        memoryDict = dict()
+        for id in intarnaIDs:
+            memoryDict[id] = []
+
+        for row in memoryDF.iterrows():
+            index, data = row
+            memoryDict[memoryDF.get_value(index, "callID")] += data.tolist()[3:]
+
+        keys = list(memoryDict.keys())
+        human_sort(keys)
+
+        memoryData = []
+        if args.fixedID != "":
+            keys.remove(args.fixedID)
+        for key in keys:
+            memoryData.append(memoryDict[key])
+        if args.fixedID != "":
+            memoryData = [memoryDict[args.fixedID]] + memoryData
+
+        violin_parts = ax2.violinplot(memoryData, showextrema=True, showmeans=True, showmedians=True)
+        for idx, pc in enumerate(violin_parts['bodies']):
+            pc.set_facecolor(colorList[::-1][idx])
+            pc.set_edgecolor('black')
+            pc.set_alpha(1)
+
+        for part in ("cbars", "cmins", "cmaxes", "cmeans"):
+            vp = violin_parts[part]
+            vp.set_edgecolor('black')
+
+        vp = violin_parts["cmedians"]
+        vp.set_edgecolor("black")
+        vp.set_linestyle("--")
+
+        ax2.axes.set_ylabel("memory (in megabytes)", fontsize=16)
+        ax2.axes.yaxis.set_label_position("right")
+        ax2.axes.yaxis.set_ticks_position("right")
+        ax2.axes.set_xticks([])
+
+        if args.fixedID != "":
+            keys = [args.fixedID] + keys
+
+        set_axis_style(ax1, keys)
+        set_axis_style(ax2, keys)
+
+        plt.suptitle("Time and memory consumption", fontsize=20)
+        # plt.legend(handles=ax2, labels=keys)
+        # print(handles, labels)
+        for tick in ax1.get_xticklabels():
+            tick.set_rotation(25)
+        for tick in ax2.get_xticklabels():
+            tick.set_rotation(25)
+
+        plt.tight_layout(rect=[0,0.03,1,0.95])
+        plt.savefig(args.outFile.replace(".pdf", "") + "_info.pdf")
+        plt.close()
 
 if __name__ == "__main__":
     main(sys.argv[1:])
