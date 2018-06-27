@@ -62,10 +62,11 @@ def main(argv):
     # Create a dictionary from the srna_files for better access
     srnaDict = dict()
     for srna in srnaList:
-        if srna in srnaDict:
-            srnaDict[srna].insert([x for x in srna_files if srna in x])
-        else:
-            srnaDict[srna] = [x for x in srna_files if srna in x]
+        for organism in organisms:
+            if (srna, organism) in srnaDict:
+                srnaDict[(srna, organism)].insert([x for x in srna_files if srna in x and organism in x])
+            else:
+                srnaDict[(srna, organism)] = [x for x in srna_files if srna in x and organism in x]
 
     outputText= "srna_name;target_ltag;target_name;%s_intarna_rank\n" % args.benchID
 
@@ -74,7 +75,8 @@ def main(argv):
         for organism in organisms:
             if (srna_name, organism) in confirmed_hybrids:
                 for confirmed_hybrid in confirmed_hybrids[(srna_name, organism)]:
-                    for file in srnaDict[srna_name]:
+
+                    for file in srnaDict[(srna_name, organism)]:
                         try:
                             df = pd.read_csv(file, sep=";", header=0)
                         except pd.errors.ParserError as err:
@@ -92,8 +94,7 @@ def main(argv):
 
                             outputText += "%s;%s;%s;%s\n" % (srna_name, target_ltag, target_name, intaRNA_rank)
                         except ValueError:
-                            continue
-
+                            outputText += "%s;%s;%s;%s\n" % (srna_name, target_ltag, target_name, 99999)
 
     # Check whether the outputFile is empty
     if outputText == "srna_name;target_ltag;target_name;intarna_rank\n":

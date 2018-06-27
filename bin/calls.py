@@ -34,7 +34,7 @@ def main(argv):
         description="Call script for benchmarking IntaRNA. IntaRNA commandLineArguments can be added at the end of the call."
                     "python3 calls.py -c <callID>  --<IntaRNA arguments>")
     parser.add_argument("-i", "--ifile", action="store", dest="intaRNAPath",
-                        default=os.path.join("..", "..", "IntaRNA", "src", "bin", "")
+                        default=os.path.join("..", "..", "IntaRNA", "src", "bin")
                         , help="the location of the intaRNA executable. Default: ../../IntaRNA/src/bin .")
     parser.add_argument("-f", "--ffile", action="store", dest="inputPath", default=os.path.join("..", "input")
                         , help="input folder containing the required fasta files. Default: ./input")
@@ -88,7 +88,7 @@ def main(argv):
                 edValueFolder = os.path.join("..", "ED-values", organism, target_name)
                 if not os.path.exists(edValueFolder):
                     os.makedirs(edValueFolder)
-                    call = args.intaRNAPath + "IntaRNA" + " -q " + "AAAAAAAA" \
+                    call = os.path.join(args.intaRNAPath, "IntaRNA") + " -q " + "AAAAAAAA" \
                                                         + " -t " + target + " --noSeed" \
                                                         + " -n 0 --out=/dev/null" \
                                                         + " --out=tAcc:" + os.path.join(edValueFolder, "intarna.target.ed")
@@ -100,7 +100,7 @@ def main(argv):
                         call += " --threads=" + cmdLineArgs.split("threads=")[-1].split(" ")[0]
 
                     # call
-                    callArgs = shlex.split(call)
+                    callArgs = shlex.split(call, posix=False)
                     runSubprocess(callArgs)
 
         print("Preprocessing completed!")
@@ -149,7 +149,7 @@ def main(argv):
                 out = os.path.join(args.outputPath, args.callID, srna_name + "_" + target_name + ".csv")
 
                 # IntaRNA call
-                call = args.intaRNAPath + "IntaRNA" + " -q " + srna_file \
+                call = os.path.join(args.intaRNAPath, "IntaRNA") + " -q " + srna_file \
                                                     + " -t " + target_file \
                                                     + " --out " + out \
                                                     + " --outMode C " \
@@ -164,7 +164,7 @@ def main(argv):
 
                 if not args.noJobStart:
                     # split call for subprocess creation
-                    callArgs = shlex.split(call)
+                    callArgs = shlex.split(call, posix=False)
                     # do call and get process information
                     timeCall, maxMemory = runSubprocess(callArgs)
                     # store process information
@@ -190,7 +190,7 @@ def main(argv):
     if not args.noJobStart:
         # Start benchmarking for this callID
         callBenchmark = "python3 benchmark.py -b %s" % (args.callID)
-        with Popen(shlex.split(callBenchmark), stdout=PIPE) as process:
+        with Popen(shlex.split(callBenchmark, posix=False), stdout=PIPE) as process:
             print(str(process.stdout.read(), "utf-8"))
 
 

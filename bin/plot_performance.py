@@ -5,8 +5,12 @@ import sys, argparse
 import os
 import pandas as pd
 import matplotlib
+import re
+import operator
+import numpy as np
 
 matplotlib.use('Agg')
+from itertools import cycle
 import matplotlib.pyplot as plt
 
 ########################################################################################################################
@@ -15,6 +19,35 @@ import matplotlib.pyplot as plt
 #                                                                                                                      #
 #                                                                                                                      #
 ########################################################################################################################
+
+# List of easily differentiable color codes
+colorList = ['#f032e6', '#808080', '#000080', '#808000', '#aaffc3', '#ffe119', '#800000', '#aa6e28', '#e6beff', '#008080',
+             '#fabebe', '#d2f53c', '#46f0f0', '#911eb4', '#f58231', '#0082c8', '#3cb44b']
+
+lineList = ["--", "-"]
+
+# Differentiate between ints and other chars/strings
+def isInt(i):
+    try:
+        return int(i)
+    except:
+        return i
+
+# Split strings into lists of strings and numbers
+def alphanumeric_key(s):
+    return [isInt(c) for c in re.split('([0-9]+)', s)]
+
+# Sort the way a human expects it
+def human_sort(l):
+    l.sort(key=alphanumeric_key)
+
+# set axis
+def set_axis_style(ax, labels):
+    ax.get_xaxis().set_tick_params(direction='out')
+    # ax.xaxis.set_ticks_position('bottom')
+    ax.set_xticks(np.arange(1, len(labels) + 1))
+    ax.set_xticklabels(labels, fontsize=12)
+    #ax.set_xlim(0.25, len(labels) + 0.75)
 
 def main(argv):
     parser = argparse.ArgumentParser(description="Script for plotting the benchmark results")
@@ -30,6 +63,23 @@ def main(argv):
                         , help="specify a xlim for the output.")
     parser.add_argument("-y", "--ylim", action="store", dest="ylim", default=""
                         , help="specify a ylim for the output.")
+    parser.add_argument("-f", "--fixed", action="store", dest="fixedID", default=""
+                        , help="callID that gets a fixed color (red)")
+    parser.add_argument("-t", "--title", action="store", dest="title", default=""
+                        , help="the title of the plot.")
+    parser.add_argument("--lines", action="store_true", dest="lines", default=False
+                        , help="use different line types, evenly distributed")
+    parser.add_argument("-p", "--plotType", action="store", dest="plotType", default="merged"
+                        , help="Decide whether to use merged or single plots")
+    parser.add_argument("-a", "--additional", action="store_true", dest="additional", default=False
+                        , help="Create additional plots for the time and memory consumption.")
+    parser.add_argument("-r", "--rotation", action="store", dest="rotation", default=0
+                        , help="The rotation of the xticks.")
+    parser.add_argument("--lsize", action="store", dest="legendSize", default=14
+                        , help="The fontsize of the legend.")
+    parser.add_argument("--time", action="store_true", dest="time", default=False
+                        , help="plot only the time")
+
     args = parser.parse_args()
 
     if args.benchmarkFile == "":
@@ -39,8 +89,7 @@ def main(argv):
     if os.path.exists(args.benchmarkFile):
         benchDF = pd.read_csv(args.benchmarkFile, sep=args.separator, header=0)
         prefix = ["srna_name", "target_ltag", "target_name"]
-        intarnaIDs = [x for x in benchDF.columns if x not in prefix]
-        print(intarnaIDs)
+        intarnaIDs = [x.replace("_intarna_rank", "") for x in benchDF.columns if x not in prefix]
 
         rankDictionary = dict()
         # Init dictionary
@@ -50,29 +99,371 @@ def main(argv):
         # Get the ranks for each callID
         for i in range(1, args.end):
             for id in intarnaIDs:
-                rankDictionary[id].append(len(benchDF[benchDF[id] <= i]))
+                rankDictionary[id].append(len(benchDF[benchDF[id+"_intarna_rank"] <= i]))
 
-        # Plot the data
-        if bool(rankDictionary):
-            # Plot the data
-            keys = rankDictionary.keys()
+        # plot type roc
+        if args.plotType == "split":
+
+            linecycler = cycle(lineList)
+            colorcycler = cycle(colorList[::-1])
+            keys = list(rankDictionary.keys())
+            human_sort(keys)
+
+            fig, ax = plt.subplots(nrows=1, ncols=1)
+
+            # Plot all wanted callIDs
             for key in keys:
-                plt.plot(rankDictionary[key], label=key.replace("_intarna_rank", ""))
+                # If fixedID is given plot it in red
+                if args.fixedID != "":
+                    if key == args.fixedID:
+                        ax.plot(rankDictionary[args.fixedID], label=args.fixedID, color="red", zorder=30)
+                        continue
 
-            plt.legend(loc="lower right")
-            plt.xlabel("# Target predictions per sRNA")
-            plt.ylabel("# True positive")
+                # Plot rest
+                if not args.lines:
+                    ax.plot(rankDictionary[key], label=key, color=next(colorcycler))
+                else:
+                    ax.plot(rankDictionary[key], label=key, color=next(colorcycler), linestyle=next(linecycler))
 
+            # Set the title, if given
+            if args.title != "":
+                plt.title(args.title)
+
+            # Create the legend
+            plt.legend(loc="lower right", fontsize=args.legendSize)
+            plt.xlabel("# Target predictions per sRNA", fontsize=16)
+            plt.ylabel("# True positive", fontsize=16)
+
+            # Handle user input for the x and y limits
             if args.xlim != "" and "/" in args.xlim:
-                plt.xlim(int(args.xlim.split("/")[0]), int(args.xlim.split("/")[1]))
+                ax.axes.set_xlim(int(args.xlim.split("/")[0]), int(args.xlim.split("/")[1]))
             if args.ylim != "" and "/" in args.ylim:
-                plt.ylim(int(args.ylim.split("/")[0]), int(args.ylim.split("/")[1]))
+                ax.axes.set_ylim(ymax=int(args.ylim.split("/")[1]))
 
+            plt.savefig(args.outFile.replace(".pdf", "") + "_roc.pdf")
+
+
+            if args.fixedID == "":
+                sys.exit("Please provide a reference curve with --fixedID=<callID> to compute the violin plot.")
+
+            refData = rankDictionary[args.fixedID]
+            rankDictionary.pop(args.fixedID, None)
+
+            keys = list(rankDictionary.keys())
+            human_sort(keys)
+
+            fig, ax = plt.subplots(nrows=1, ncols=1)
+
+            data = []
+            for key in keys:
+                data.append(list(map(operator.sub, rankDictionary[key], refData)))
+
+            violin_parts = ax.violinplot(data, showextrema=True, showmeans=True, showmedians=True)
+            for idx, pc in enumerate(violin_parts['bodies']):
+                pc.set_facecolor(colorList[::-1][idx])
+                pc.set_edgecolor('black')
+                pc.set_alpha(1)
+
+            for part in ("cbars", "cmins", "cmaxes", "cmeans"):
+                vp = violin_parts[part]
+                vp.set_edgecolor('black')
+
+            vp = violin_parts["cmedians"]
+            vp.set_edgecolor("black")
+            vp.set_linestyle("--")
+
+
+            set_axis_style(ax, keys)
+
+            for tick in ax.get_xticklabels():
+                tick.set_rotation(args.rotation)
+
+            ax.axes.set_ylim( ymin=-33, ymax=20)
+            plt.ylabel("true positive deviation", fontsize=16)
+
+            # plt.xticks(rotation=15)
+            plt.tight_layout()
+            plt.axhline(y=0, color="red", linestyle="-", zorder=0)
+            plt.savefig(args.outFile.replace(".pdf","") + "_violin.pdf")
+            plt.close()
+        elif args.plotType == "merged":
+            if args.fixedID == "":
+                sys.exit("Please provide a reference curve with --fixedID=<callID> to compute the violin plot.")
+
+
+            linecycler = cycle(lineList)
+            colorcycler = cycle(colorList[::-1])
+            keys = list(rankDictionary.keys())
+            human_sort(keys)
+
+            # Create a subplot
+            fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(14,6))
+
+            # PLOT 1 (ROC)
+            for key in keys:
+                if key == args.fixedID:
+                    ax1.plot(rankDictionary[args.fixedID], label=args.fixedID, color="red", zorder=30)
+                    continue
+
+                if not args.lines:
+                    ax1.plot(rankDictionary[key], label=key, color=next(colorcycler))
+                else:
+                    ax1.plot(rankDictionary[key], label=key, color=next(colorcycler), linestyle=next(linecycler))
+
+            # Create the legend
+            ax1.legend(loc="lower right", fontsize=args.legendSize)
+            ax1.axes.set_xlabel("# Target predictions per sRNA", fontsize=16)
+            ax1.axes.set_ylabel("# True positive", fontsize=16)
+
+            # Handle user input for the x and y limits
+            if args.xlim != "" and "/" in args.xlim:
+                ax1.axes.set_xlim(int(args.xlim.split("/")[0]), int(args.xlim.split("/")[1]))
+            if args.ylim != "" and "/" in args.ylim:
+                ax1.axes.set_ylim(ymax=int(args.ylim.split("/")[1]))
+
+            # ax1.axes.set_xscale("log")
+            # Data preparations
+            refData = rankDictionary[args.fixedID]
+            rankDictionary.pop(args.fixedID, None)
+
+            # Keys without reference key
+            keys = list(rankDictionary.keys())
+            human_sort(keys)
+
+            violinData = []
+            for key in keys:
+                violinData.append(list(map(operator.sub, rankDictionary[key], refData)))
+
+            violin_parts = ax2.violinplot(violinData, showextrema=True, showmeans=True, showmedians=True)
+            for idx, pc in enumerate(violin_parts['bodies']):
+                pc.set_facecolor(colorList[::-1][idx])
+                pc.set_edgecolor('black')
+                pc.set_alpha(1)
+
+            for part in ("cbars", "cmins", "cmaxes", "cmeans"):
+                vp = violin_parts[part]
+                vp.set_edgecolor('black')
+
+            vp = violin_parts["cmedians"]
+            vp.set_edgecolor("black")
+            vp.set_linestyle("--")
+
+            ax2.axes.set_ylabel("true positive deviation", fontsize=16)
+            ax2.axes.yaxis.set_label_position("right")
+            ax2.axes.yaxis.set_ticks_position("right")
+            ax2.axes.set_xticks([])
+
+            ax2.axhline(y=0, color="red", linestyle="-", zorder=0)
+
+            # Set the title, if given
+            if args.title != "":
+                plt.suptitle(args.title, fontsize=20)
+
+            plt.tight_layout(rect=[0,0.03,1,0.95])
             plt.savefig(args.outFile)
+            plt.close()
+
+        else:
+            sys.exit("Please specify a plot type: -p<'roc' / 'violin' / 'merged'>")
+
+        # Time and Memory plots
+        if (args.additional):
+            runTimeFile = os.path.splitext(args.benchmarkFile)[0] + "_runTimes.csv"
+            memoryFile = os.path.splitext(args.benchmarkFile)[0] + "_MaxMemoryUsage.csv"
+
+            if not os.path.exists(runTimeFile):
+                sys.exit("no runTimeFile found!!")
+            if not os.path.exists(memoryFile):
+                sys.exit("no maxMemoryUsage file found!!")
+
+            timeDF = pd.read_csv(runTimeFile, sep=args.separator, header=0)
+            memoryDF = pd.read_csv(memoryFile, sep=args.separator, header=0)
+
+            human_sort(intarnaIDs)
+
+            prefix = ["srna_name", "target_ltag", "target_name"]
+            intarnaIDs = [x.replace("_intarna_rank", "") for x in benchDF.columns if x not in prefix]
+
+            # Create a subplot
+            fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(14,6))
+
+            # Time
+            timeDict = dict()
+            for id in intarnaIDs:
+                timeDict[id] = []
+
+            for row in timeDF.iterrows():
+                index, data = row
+                timeDict[timeDF.get_value(index, "callID")] += data.tolist()[3:]
+
+            keys = list(timeDict.keys())
+            human_sort(keys)
+
+            timeData = []
+            if args.fixedID != "":
+                keys.remove(args.fixedID)
+            for key in keys:
+                timeData.append(timeDict[key])
+
+            if args.fixedID != "":
+                timeData = [timeDict[args.fixedID]] + timeData
+
+            # Convert time from sec to min
+            timeData = [[y/60 for y in x] for x in timeData]
+            if args.fixedID != "":
+                colorList.append("red")
+
+            violin_parts = ax1.violinplot(timeData, showextrema=True, showmeans=True, showmedians=True)
+            for idx, pc in enumerate(violin_parts['bodies']):
+                pc.set_facecolor(colorList[::-1][idx])
+                pc.set_edgecolor('black')
+                pc.set_alpha(1)
+
+            for part in ("cbars", "cmins", "cmaxes", "cmeans"):
+                vp = violin_parts[part]
+                vp.set_edgecolor('black')
+
+            vp = violin_parts["cmedians"]
+            vp.set_edgecolor("black")
+            vp.set_linestyle("--")
+
+            ax1.axes.set_ylabel("time (in minutes)", fontsize=16)
+            ax1.axes.set_xticks([])
+
+
+            # Memory
+            memoryDict = dict()
+            for id in intarnaIDs:
+                memoryDict[id] = []
+
+            for row in memoryDF.iterrows():
+                index, data = row
+                memoryDict[memoryDF.get_value(index, "callID")] += data.tolist()[3:]
+
+            keys = list(memoryDict.keys())
+            human_sort(keys)
+
+            memoryData = []
+            if args.fixedID != "":
+                keys.remove(args.fixedID)
+            for key in keys:
+                memoryData.append(memoryDict[key])
+            if args.fixedID != "":
+                memoryData = [memoryDict[args.fixedID]] + memoryData
+
+            violin_parts = ax2.violinplot(memoryData, showextrema=True, showmeans=True, showmedians=True)
+            for idx, pc in enumerate(violin_parts['bodies']):
+                pc.set_facecolor(colorList[::-1][idx])
+                pc.set_edgecolor('black')
+                pc.set_alpha(1)
+
+            for part in ("cbars", "cmins", "cmaxes", "cmeans"):
+                vp = violin_parts[part]
+                vp.set_edgecolor('black')
+
+            vp = violin_parts["cmedians"]
+            vp.set_edgecolor("black")
+            vp.set_linestyle("--")
+
+            ax2.axes.set_ylabel("memory (in megabytes)", fontsize=16)
+            ax2.axes.yaxis.set_label_position("right")
+            ax2.axes.yaxis.set_ticks_position("right")
+            ax2.axes.set_xticks([])
+
+            if args.fixedID != "":
+                keys = [args.fixedID] + keys
+
+            set_axis_style(ax1, keys)
+            set_axis_style(ax2, keys)
+
+            plt.suptitle("Time and memory consumption", fontsize=20)
+            # plt.legend(handles=ax2, labels=keys)
+            # print(handles, labels)
+            for tick in ax1.get_xticklabels():
+                tick.set_rotation(args.rotation)
+            for tick in ax2.get_xticklabels():
+                tick.set_rotation(args.rotation)
+
+            plt.tight_layout(rect=[0,0.03,1,0.95])
+            plt.show()
+            plt.savefig(os.path.splitext(args.outFile)[0] + "_info.pdf")
+            plt.close()
+
+
+        if args.time:
+            runTimeFile = os.path.splitext(args.benchmarkFile)[0] + "_runTimes.csv"
+
+            if not os.path.exists(runTimeFile):
+                sys.exit("no runTimeFile found!!")
+
+            timeDF = pd.read_csv(runTimeFile, sep=args.separator, header=0)
+
+            human_sort(intarnaIDs)
+
+            prefix = ["srna_name", "target_ltag", "target_name"]
+            intarnaIDs = [x.replace("_intarna_rank", "") for x in benchDF.columns if x not in prefix]
+
+            # Time
+            timeDict = dict()
+            for id in intarnaIDs:
+                timeDict[id] = []
+
+            for row in timeDF.iterrows():
+                index, data = row
+                timeDict[timeDF.get_value(index, "callID")] += data.tolist()[3:]
+
+            keys = list(timeDict.keys())
+            human_sort(keys)
+
+            timeData = []
+            if args.fixedID != "":
+                keys.remove(args.fixedID)
+            for key in keys:
+                timeData.append(timeDict[key])
+
+            if args.fixedID != "":
+                timeData = [timeDict[args.fixedID]] + timeData
+
+            # Convert time from sec to min
+            timeData = [[y / 60 for y in x] for x in timeData]
+            if args.fixedID != "":
+                colorList.append("red")
+
+            fig, ax = plt.subplots(nrows=1, ncols=1)
+
+            violin_parts = ax.violinplot(timeData, showextrema=True, showmeans=True, showmedians=True)
+            for idx, pc in enumerate(violin_parts['bodies']):
+                pc.set_facecolor(colorList[::-1][idx])
+                pc.set_edgecolor('black')
+                pc.set_alpha(1)
+
+            for part in ("cbars", "cmins", "cmaxes", "cmeans"):
+                vp = violin_parts[part]
+                vp.set_edgecolor('black')
+
+            vp = violin_parts["cmedians"]
+            vp.set_edgecolor("black")
+            vp.set_linestyle("--")
+
+            if args.fixedID != "":
+                keys = [args.fixedID] + keys
+
+            set_axis_style(ax, keys)
+
+            ax.set_ylabel("time (in minutes)", fontsize=16)
+            ax.axes.yaxis.set_label_position("right")
+
+            for tick in ax.get_xticklabels():
+                tick.set_rotation(args.rotation)
+
+            plt.tight_layout()
+            plt.show()
+            plt.savefig(os.path.splitext(args.outFile)[0] + "_time.pdf")
             plt.close()
 
     else:
         sys.exit("Could not find %s!" % args.benchmarkFile)
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])

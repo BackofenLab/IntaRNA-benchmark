@@ -63,7 +63,7 @@ def main(argv):
                         , help="a mandatory ID to differentiate between multiple calls of the script. Specify multiple ones by using benchID1/benchID2/...")
     parser.add_argument("-a", "--all", action="store_true", dest="all", default=False
                         , help="When set all available benchmark folders will be merged.")
-    args = parser.parse_args();
+    args = parser.parse_args()
 
     # Enforce an outputfile path/name.csv
     if args.outputfile == "":
@@ -71,7 +71,6 @@ def main(argv):
 
     # read all benchfiles in folder
     allIDfolders = [x for x in glob.glob(os.path.join(args.benchFilePath, "*")) if os.path.isdir(x)]
-    print(allIDfolders)
 
     if not args.all:
         # Check whether a benchID was given
