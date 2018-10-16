@@ -7,19 +7,19 @@ import glob
 
 def main(argv):
     parser = argparse.ArgumentParser(description="Benchmark IntaRNA")
-    parser.add_argument("-i", "--ifile", action="store", dest="verified_interactions", default=os.path.join("..", "verified_interactions.csv")
+    parser.add_argument("-i", "--infile", action="store", dest="verified_interactions", default=os.path.join("..", "verified_interactions.csv")
                         , help= "location of the file containing the verified interactions.")
-    parser.add_argument("-o", "--ofile", action="store", dest="outputfile", default=os.path.join(".", "benchmark.csv")
+    parser.add_argument("-o", "--outfile", action="store", dest="outputfile", default=os.path.join(".", "benchmark.csv")
                         , help="path of the benchmark outputfile.")
-    parser.add_argument("-p", "--pdirs", action="store", dest="directoryPath", default=os.path.join("..", "output")
+    parser.add_argument("-p", "--callDirs", action="store", dest="directoryPath", default=os.path.join("..", "output")
                         , help="path to directory containing the output of the calls script. ")
-    parser.add_argument("-b", "--benchID", action="store", dest="benchID", default=""
+    parser.add_argument("-c", "--callID", action="store", dest="callID", default=""
                         , help="a mandatory ID to differentiate between multiple calls of the script.")
     args = parser.parse_args()
 
-    # Check whether a benchID was given
-    if args.benchID == "":
-        sys.exit("No benchID was specified! Please specify a benchID using -b <name> or --benchID=<name>")
+    # Check whether a callID was given
+    if args.callID == "":
+        sys.exit("No callID was specified! Please specify a callID using -c <name> or --callID=<name>")
 
     # read verified interactions
     if os.path.exists(args.verified_interactions) == True:
@@ -28,10 +28,10 @@ def main(argv):
     else:
         sys.exit("Error: %s! File not found!" % (args.verified_interactions))
 
-    # check whether the benchID is valid (no file with that name exists)
-    outputPath = os.path.join(args.directoryPath, args.benchID, args.outputfile)
+    # check whether the callID is valid (no file with that name exists)
+    outputPath = os.path.join(args.directoryPath, args.callID, args.outputfile)
     if os.path.exists(outputPath):
-        sys.exit("A file for this benchID already exists! Exiting...")
+        sys.exit("A file for this callID already exists! Exiting...")
 
     # Create a dictionary for better accessibility of srna data
     confirmed_hybrids = dict()
@@ -52,12 +52,12 @@ def main(argv):
             confirmed_hybrids[(spl[0], spl[3])] = [(spl[1], spl[2])]
 
     # Get all directories with needed files and sort them
-    srna_files = [x for x in glob.glob(os.path.join(args.directoryPath, args.benchID, "*.csv")) if x.split(os.path.sep)[-1].split("_")[0] in srnaList]
+    srna_files = [x for x in glob.glob(os.path.join(args.directoryPath, args.callID, "*.csv")) if x.split(os.path.sep)[-1].split("_")[0] in srnaList]
     srna_files.sort()
 
     # Check whether the needed files for the benchmarking exist
     if srna_files == []:
-        sys.exit("Error!!! No files found for benchmarking ID %s" % args.benchID)
+        sys.exit("Error!!! No files found for benchmarking ID %s" % args.callID)
 
     # Create a dictionary from the srna_files for better access
     srnaDict = dict()
@@ -68,7 +68,7 @@ def main(argv):
             else:
                 srnaDict[(srna, organism)] = [x for x in srna_files if srna in x and organism in x]
 
-    outputText= "srna_name;target_ltag;target_name;%s_intarna_rank\n" % args.benchID
+    outputText= "srna_name;target_ltag;target_name;%s_intarna_rank\n" % args.callID
 
     # determine the rank of intaRNA given the confirmed hybrids
     for srna_name in srnaList:
@@ -105,7 +105,7 @@ def main(argv):
     csv_file.write(outputText)
     csv_file.close()
 
-    print("Finished benchmarking: %s" % args.benchID)
+    print("Finished benchmarking: %s" % args.callID)
 
 if __name__ == "__main__":
    main(sys.argv[1:])

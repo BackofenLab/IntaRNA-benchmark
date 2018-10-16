@@ -35,7 +35,7 @@ The lower the rank, the better.
 In order to visualize the results, a receiver operating characteristic (ROC) curve is used.
 It is created using the ranks determined earlier.
 The X-axis describes the number of target predictions per query RNA, while the Y-axis represents
-the number of true positives. 
+the number of true positives.
 This means that for each X, the number of ranks that are smaller or equal to X are counted and represented on the Y-axis.
 Like this, multiple callIDs can be plotted into the same graph to compare the performance.
 
@@ -45,11 +45,12 @@ The scripts are contained in the bin folder.
 
 #### calls.py
 __Parameters:__
-* __intaRNAPath (`-i`)__ the location of the intaRNA executable. Default: __..__/__..__/IntaRNA/src/bin/ 
-* __inputPath (`-f`)__ location of the folder containing folders for each organism. The organism folders have to contain a query and a target folder holding the according fasta files. Default: __..__/input/
-* __outputPath (`-o`)__ location of the output folder. The script will add a folder for each callID. Default: __..__/output/
+* __intaRNAbinary (`-b`)__ the path of the intaRNA executable. Default: `../../IntaRNA/src/bin/IntaRNA` 
+* __infile (`-i`)__ location of the folder containing folders for each organism. The organism folders have to contain a query and a target folder holding the according fasta files. Default: `../input/`
+* __outfile (`-o`)__ location of the output folder. The script will add a folder for each callID. Default: `../output/`
 * __callID (`-c`)__ is a mandatory ID to differentiate between multiple calls of the script.
 * __withED (`-e`)__ allows the precomputation of target ED-values in order to avoid recomputation.
+* __callsOnly (`-n`)__ generates the calls and saves them in a log file without starting the process.
 
 __IMPORTANT:__ Arguments for IntaRNA can be added at the end of the script call and will be redirected to IntaRNA. python3 calls.py -c "callID"   --"IntaRNA cmdLineArguments"
 
@@ -57,7 +58,7 @@ This script calls IntaRNA from `intaRNAPath` using the queries and targets for a
 The results of IntaRNA are piped to stdout and then into an output file in the `outputPath` where the `callID` is used for according file naming.
 There are many different controls to assure that no files are overwritten and that the required files are available.
 
-The time (in seconds) and maximal memory usage (in megabyte) required to handle each call is also measured and represented in a table. 
+The time (in seconds) and maximal memory usage (in megabyte) required to handle each call is also measured and represented in a table.
 The tables are also stored in the specified `outputPath`. The individual calls are also logged into a log file.
 
 When `withED` option is set, the ED-values for all targets will be precomputed and stored in a folder `ED-values/'organism'/target_name/`.
@@ -75,15 +76,15 @@ __Output:__ (contained in the respective callID folder)
 #### benchmark.py
 
 __Parameters:__
-* __verifiedHybrids (`-i`)__ the location of the file containing the experimentally verified interactions. Default: __..__/verified_interactions.csv
-* __outputFile (`-o`)__ the name of the output file. Default: /benchmark.csv
-* __outputPath (`-p`)__ the location where the output of the calls.py script lies. Default: __..__/output/
-* __benchID (`-b`)__ mandatory ID to differentiate between multiple benchmarkings. (equal to callID)
+* __infile (`-i`)__ the location of the file containing the experimentally verified interactions. Default: `../verified_interactions.csv`
+* __outfile (`-o`)__ the name of the output file. Default: `/benchmark.csv`
+* __callDirs (`-p`)__ the location where the output of the calls.py script lies. Default: `../output/`
+* __callID (`-c`)__ mandatory ID to differentiate between multiple benchmarkings.
 
 This script uses the output of the `calls.py` script. It is called automatically at the end of the `calls.py` script.
 It stores the verified interactions from the specified file in a dictionary and calculates the rank for each interaction.
 In order to achieve this, it reads the files created by the `calls.py` script and sorts the tables according to the energy.
-Once the files are sorted, the row-number for each interaction in the verified interactions file is determined. 
+Once the files are sorted, the row-number for each interaction in the verified interactions file is determined.
 The resulting row-number is the rank for that interaction.
 The ranks are then stored in a CSV file.
 
@@ -96,7 +97,7 @@ __Default Output:__ (contained in the respective `callID` folder)
 __Parameters:__
 * __benchmarkFile (`-i`)__ mandatory benchmark file used to plot the results. (created using benchmark.py eventually in compination with mergeBenchmarks.py)
 * __outputFilePath (`-o`)__ the location and name of the output file. Default: IntaRNA2_benchmark.pdf .
-* __separator (`-s`)__ separator used for the csv files. Default: '__;__'
+* __separator (`-s`)__ separator used for the csv files. Default: `;`
 * __end (`-e`)__ the upper bound of the number of target predictions. Default: 200
 * __xlim (`-x`)__ specify an x-limit for the output. x_start/x_end (x is already bound by end, changing might lead to strange results)
 * __ylim (`-y`)__ specify an y-limit for the output. y_start/y_end
@@ -104,7 +105,7 @@ __Parameters:__
 __Under Construction: use plot_boxes__
 This script uses a benchmark.csv file created by the `benchmark.py` script.
 For each callID present in the benchmark file, the ranks are used to create a receiver operating characteristic (ROC) curve.
-For each step from 1 to "end(200)" the number of ranks that are smaller or equal to the current step are recorded. 
+For each step from 1 to "end(200)" the number of ranks that are smaller or equal to the current step are recorded.
 These are the desired true positives.
 
 __Default Output:__
@@ -115,7 +116,7 @@ __Default Output:__
 __Parameters:__
 * __benchmarkFile (`-i`)__ mandatory benchmark file used to plot the results. (created using benchmark.py eventually in compination with mergeBenchmarks.py)
 * __outputFilePath (`-o`)__ the location and name of the output file. Default: IntaRNA2_benchmark.pdf .
-* __separator (`-s`)__ separator used for the csv files. Default: '__;__'
+* __separator (`-s`)__ separator used for the csv files. Default: `;`
 * __title (`-t`)__ title for the plot
 * __rankThreshold (`-r`)__ thresholds for which the boxplots are created. Default: 5 10 50 100 200
 * __fixedID (`-f`)__ the callID for the reference curve (needed for the boxplots)
@@ -146,5 +147,3 @@ __Parameters:__
 * __callID (`-c`)__ specific callIDs that will be deleted. callID1/callID2/...
 
 Script to delete specific callIDs. If no specification is made all callIDs will be deleted from the specified folder.
-
-
