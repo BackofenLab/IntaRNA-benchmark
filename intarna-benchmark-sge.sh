@@ -47,12 +47,6 @@ then
   exit;
 fi
 
-# handling intaRNA commandline arguments
-if [ "$intaRNACall" != "" ]
-then
-  intaRNACall="-a $intaRNACall"
-fi
-
 # Run benchmark
 if [ "$withED" == true ]
 then
