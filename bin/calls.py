@@ -51,6 +51,9 @@ def main(argv):
     #  The parser may consume an option even if it’s just a prefix of one of its known options, instead of leaving it in the remaining arguments list.
     args, cmdLineArgs = parser.parse_known_args()
 
+    # Get the path of the executables in order to determine the location of other scripts
+    executablePath = os.path.dirname(__file__))
+
     # Remaining argument options are used for IntaRNA
     cmdLineArgs = " ".join(cmdLineArgs)
 
@@ -189,7 +192,7 @@ def main(argv):
 
     if not args.noJobStart:
         # Start benchmarking for this callID
-        callBenchmark = "python3 benchmark.py -c %s" % (args.callID)
+        callBenchmark = "python3 " + os.path.join(executablePath, benchmark.py) + " -c %s" % (args.callID)
         with Popen(shlex.split(callBenchmark, posix=False), stdout=PIPE) as process:
             print(str(process.stdout.read(), "utf-8"))
 

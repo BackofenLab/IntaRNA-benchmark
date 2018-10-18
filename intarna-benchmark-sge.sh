@@ -1,17 +1,23 @@
 #!/bin/bash
-#$ -N IntaRNA-benchmark
+#$ -N intaRNA-benchmark
 #$ -cwd
 #$ -pe smp 8
 #$ -l h_vmem=1G
-#$ -o <folder path>
-#$ -e <folder path>
+#$ -o <path to the working folder>
+#$ -e <path to the working folder>
 #$ -j y
-#$ -M <email address>
+#$ -M <email address if desired>
 #$ -m a
 
-#source activate intarna-benchmark
+# This script will require a conda environment with:
+# - the necessary dependencies of intaRNA
+# - python3 | pandas
+export PATH="<path to miniconda>/miniconda3/bin/:$PATH"
+cd <path to the working folder>
+source activate intarna-benchmark
 
 # Variables
+scriptsPath="./bin/"
 intaRNAbinary="../intaRNA/src/bin/"
 inputPath="./input/"
 outputPath="./output/"
@@ -20,10 +26,12 @@ callID=""
 withED=false
 
 # Handling input
-while getopts "h?b:i:o:a:c:e" opt; do
+while getopts "h?s:b:i:o:a:c:e" opt; do
     case "$opt" in
     h|\?)
         exit 0
+        ;;
+    s)  scriptsPath=$OPTARG
         ;;
     b)  intaRNAbinary=$OPTARG
         ;;
@@ -50,7 +58,7 @@ fi
 # Run benchmark
 if [ "$withED" == true ]
 then
-  python bin/calls.py -b $intaRNAbinary -i $inputPath -o $outputPath -c $callID $intaRNACall -e
+  python3 $scriptsPath/calls.py -b $intaRNAbinary -i $inputPath -o $outputPath -c $callID $intaRNACall -e
 else
-  python bin/calls.py -b $intaRNAbinary -i $inputPath -o $outputPath -c $callID $intaRNACall
+  python3 $scriptsPath/calls.py -b $intaRNAbinary -i $inputPath -o $outputPath -c $callID $intaRNACall
 fi

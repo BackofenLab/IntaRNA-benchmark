@@ -59,12 +59,13 @@ def main(argv):
                         , help="Mandatory path and name for the outputfile.")
     parser.add_argument("-d", "--bdirs", action="store", dest="benchFilePath", default=os.path.join("..", "output")
                         , help=" path to the benchmark folders.")
-    parser.add_argument("-b", "--benchID", action="store", dest="benchID", default=""
-                        , help="a mandatory ID to differentiate between multiple calls of the script. Specify multiple ones by using benchID1/benchID2/...")
+    parser.add_argument("-b", "--benchID", nargs="*", dest="benchIDs", default=""
+                        , help="a mandatory ID to differentiate between multiple calls of the script. Specify multiple ones by using benchID1 benchID2 ...")
     parser.add_argument("-a", "--all", action="store_true", dest="all", default=False
                         , help="When set all available benchmark folders will be merged.")
     args = parser.parse_args()
 
+    print(args.benchIDs)
     # Enforce an outputfile path/name.csv
     if args.outputfile == "":
         sys.exit("Please use: python3 mergeBenchmarks.py -o <path/name.csv> to specify an output file!")
@@ -73,14 +74,13 @@ def main(argv):
     allIDfolders = [x for x in glob.glob(os.path.join(args.benchFilePath, "*")) if os.path.isdir(x)]
 
     if not args.all:
-        # Check whether a benchID was given
-        if args.benchID == "" or not "/" in args.benchID:
-            sys.exit("Please specify atleast two benchIDs using python3 mergeBenchmarks -b <name1/name2>")
+        # Check whether benchIDs were given
+        if len(args.benchIDs) < 2:
+            sys.exit("Please specify atleast two benchIDs using python3 mergeBenchmarks -b <name1 name2>")
 
         toBeMerged = []
         existingBenchIDs = []
-        benchIDs = args.benchID.split("/")
-        for bID in benchIDs:
+        for bID in args.benchIDs:
             for folder in allIDfolders:
                 if bID == folder.split(os.path.sep)[-1]:
                     toBeMerged.append(os.path.join(folder, args.infileName))
