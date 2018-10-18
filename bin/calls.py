@@ -52,7 +52,7 @@ def main(argv):
     args, cmdLineArgs = parser.parse_known_args()
 
     # Get the path of the executables in order to determine the location of other scripts
-    executablePath = os.path.dirname(__file__))
+    executablePath = os.path.dirname(__file__)
 
     # Remaining argument options are used for IntaRNA
     cmdLineArgs = " ".join(cmdLineArgs)
