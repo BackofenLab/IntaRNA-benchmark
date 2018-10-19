@@ -134,7 +134,7 @@ The upper bound of the x-axis is taken from the thresholds. Default: 200.
 __Parameters:__
 * __outputFileName (`-o`)__ mandatory name and path of the output file.
 * __outputPath (`-d`)__ location of the result directory (containing the folders of the individual callIDs).
-* __benchID (`-b`)__ specific benchIDs to be merged, atleast two. benchID1/benchID2/...
+* __benchID (`-b`)__ specific benchIDs to be merged, atleast two. benchID1 benchID2 ...
 * __all (`-a`)__ when set, all benchIDs in the outputPath are merged.
 
 This script can be used to merge benchmark files and their according runTime and memoryUsage files for multiple/all benchIDs.
