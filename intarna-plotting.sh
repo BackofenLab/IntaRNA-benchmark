@@ -79,5 +79,5 @@ then
   python3 $scriptsPath/plot_performance.py -i $tmpOutput -o $outputPath $fixedID -t $plotTitle -e $plotEnd
 else
   # plot
-  python3 $scriptsPath/plot_performance.py -i ${callIDs[0]}/benchmark.csv -o $outputPath $fixedID -t $plotTitle -e $plotEnd
+  python3 $scriptsPath/plot_performance.py -i ./inputPath/${callIDs[0]}/benchmark.csv -o $outputPath $fixedID -t $plotTitle -e $plotEnd
 fi
