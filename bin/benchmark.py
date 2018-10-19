@@ -7,11 +7,11 @@ import glob
 
 def main(argv):
     parser = argparse.ArgumentParser(description="Benchmark IntaRNA")
-    parser.add_argument("-i", "--infile", action="store", dest="verified_interactions", default=os.path.join("..", "verified_interactions.csv")
+    parser.add_argument("-i", "--infile", action="store", dest="verified_interactions", default=os.path.join(".", "verified_interactions.csv")
                         , help= "location of the file containing the verified interactions.")
     parser.add_argument("-o", "--outfile", action="store", dest="outputfile", default=os.path.join(".", "benchmark.csv")
                         , help="path of the benchmark outputfile.")
-    parser.add_argument("-p", "--callDirs", action="store", dest="directoryPath", default=os.path.join("..", "output")
+    parser.add_argument("-p", "--callDirs", action="store", dest="directoryPath", default=os.path.join(".", "output")
                         , help="path to directory containing the output of the calls script. ")
     parser.add_argument("-c", "--callID", action="store", dest="callID", default=""
                         , help="a mandatory ID to differentiate between multiple calls of the script.")

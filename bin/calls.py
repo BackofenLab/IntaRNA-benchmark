@@ -34,11 +34,11 @@ def main(argv):
         description="Call script for benchmarking IntaRNA. IntaRNA commandLineArguments can be added at the end of the call."
                     "python3 calls.py -c <callID>  --<IntaRNA arguments>")
     parser.add_argument("-b", "--intaRNAbinary", action="store", dest="intaRNAbinary",
-                        default=os.path.join("..", "..", "IntaRNA", "src", "bin", "IntaRNA")
-                        , help="the location of the intaRNA executable. Default: ../../IntaRNA/src/bin .")
-    parser.add_argument("-i", "--infile", action="store", dest="inputPath", default=os.path.join("..", "input")
+                        default=os.path.join("..", "IntaRNA", "src", "bin", "IntaRNA")
+                        , help="the location of the intaRNA executable. Default: ../IntaRNA/src/bin .")
+    parser.add_argument("-i", "--infile", action="store", dest="inputPath", default=os.path.join(".", "input")
                         , help="input folder containing the required fasta files. Default: ./input")
-    parser.add_argument("-o", "--outfile", action="store", dest="outputPath", default=os.path.join("..", "output")
+    parser.add_argument("-o", "--outfile", action="store", dest="outputPath", default=os.path.join(".", "output")
                         , help="location of the output folder.")
     parser.add_argument("-c", "--callID", action="store", dest="callID", default=""
                         , help="a mandatory ID to differentiate between multiple calls of the script.")
@@ -46,6 +46,8 @@ def main(argv):
                         , help="only generate the calls and store in the logfile but not start processes.")
     parser.add_argument("-e", "--withTargetED", action="store_true", dest="enabledTargetED", default=False
                         , help="Target ED-values will be stored in a data folder and reused for all further computations.")
+    parser.add_argument("-v", "--verified", action="store", dest="verified_interactions", default="./verified_interactions.csv"
+                        , help="The path to the file containing the verified interactions.")
 
     #   Warning  Prefix matching rules apply to parse_known_args().
     #  The parser may consume an option even if it’s just a prefix of one of its known options, instead of leaving it in the remaining arguments list.
@@ -192,7 +194,10 @@ def main(argv):
 
     if not args.noJobStart:
         # Start benchmarking for this callID
-        callBenchmark = "python3 " + os.path.join(executablePath, "benchmark.py") + " -c %s" % (args.callID)
+        callBenchmark = "python3 " + os.path.join(executablePath, "benchmark.py") \
+                                    + " -c " + args.callID \
+                                    + " -i " + args.verified_interactions \
+                                    + " -p " + args.outputPath
         with Popen(shlex.split(callBenchmark, posix=False), stdout=PIPE) as process:
             print(str(process.stdout.read(), "utf-8"))
 

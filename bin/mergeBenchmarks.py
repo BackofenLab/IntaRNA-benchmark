@@ -57,7 +57,7 @@ def main(argv):
                         , help="The default name of the result file of the benchmarking script")
     parser.add_argument("-o", "--ofile", action="store", dest="outputfile", default=os.path.join("")
                         , help="Mandatory path and name for the outputfile.")
-    parser.add_argument("-d", "--bdirs", action="store", dest="benchFilePath", default=os.path.join("..", "output")
+    parser.add_argument("-d", "--bdirs", action="store", dest="benchFilePath", default=os.path.join(".", "output")
                         , help=" path to the benchmark folders.")
     parser.add_argument("-b", "--benchID", nargs="*", dest="benchIDs", default=""
                         , help="a mandatory ID to differentiate between multiple calls of the script. Specify multiple ones by using benchID1 benchID2 ...")

@@ -42,15 +42,18 @@ Like this, multiple callIDs can be plotted into the same graph to compare the pe
 ### Scripts
 
 The scripts are contained in the bin folder.
+The default value expect the scripts to be called from the main folder of the repository.
 
 #### calls.py
 __Parameters:__
-* __intaRNAbinary (`-b`)__ the path of the intaRNA executable. Default: `../../IntaRNA/src/bin/IntaRNA` 
-* __infile (`-i`)__ location of the folder containing folders for each organism. The organism folders have to contain a query and a target folder holding the according fasta files. Default: `../input/`
-* __outfile (`-o`)__ location of the output folder. The script will add a folder for each callID. Default: `../output/`
+* __intaRNAbinary (`-b`)__ the path of the intaRNA executable. Default: `../IntaRNA/src/bin/IntaRNA`
+* __infile (`-i`)__ location of the folder containing folders for each organism. The organism folders have to contain a query and a target folder holding the according fasta files. Default: `./input/`
+* __outfile (`-o`)__ location of the output folder. The script will add a folder for each callID. Default: `./output/`
 * __callID (`-c`)__ is a mandatory ID to differentiate between multiple calls of the script.
 * __withED (`-e`)__ allows the precomputation of target ED-values in order to avoid recomputation.
 * __callsOnly (`-n`)__ generates the calls and saves them in a log file without starting the process.
+* __verified (`-v`)__ the path and file containing the verified interactions.
+
 
 __IMPORTANT:__ Arguments for IntaRNA can be added at the end of the script call and will be redirected to IntaRNA. python3 calls.py -c "callID"   --"IntaRNA cmdLineArguments"
 
