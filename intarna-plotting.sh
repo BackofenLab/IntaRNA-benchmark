@@ -21,7 +21,7 @@ inputPath="./output/"
 outputPath="./plots/intaRNA.pdf"
 all=false
 fixedID=""
-plotTitle=""
+plotTitle="''"
 plotEnd="200"
 
 # Handling input
@@ -49,9 +49,6 @@ while getopts "h?i:o:c:b:f:t:e:a" opt; do
     esac
 done
 
-# unique output file
-tmpOutput="./tmp/mergedBenchmark_$(date +%Y%m%d%H%M%S).csv"
-
 # Enforce callID
 if [ "$callIDs" == "" ]
 then
@@ -59,18 +56,28 @@ then
   exit;
 fi
 
-# merge benchmarks
-if [ "$all" == true ]
+# if more than one file is given, merge them before plotting
+if (("${#callIDs[@]}" > 1))
 then
-  python3 $scriptsPath/mergeBenchmarks.py -b $callIDs -d $inputPath -o $tmpOutput -a
+  # unique output file
+  tmpOutput="./tmp/mergedBenchmark_$(date +%Y%m%d%H%M%S).csv"
+
+  # merge benchmarks
+  if [ "$all" == true ]
+  then
+    python3 $scriptsPath/mergeBenchmarks.py -b $callIDs -d $inputPath -o $tmpOutput -a
+  else
+    python3 $scriptsPath/mergeBenchmarks.py -b $callIDs -d $inputPath -o $tmpOutput
+  fi
+
+  if [ "$fixedID" != "" ]
+  then
+    fixedID="-f $fixedID"
+  fi
+
+  # plot
+  python3 $scriptsPath/plot_performance.py -i $tmpOutput -o $outputPath $fixedID -t $plotTitle -e $plotEnd
 else
-  python3 $scriptsPath/mergeBenchmarks.py -b $callIDs -d $inputPath -o $tmpOutput
+  # plot
+  python3 $scriptsPath/plot_performance.py -i ${callIDs[0]}/benchmark.csv -o $outputPath $fixedID -t $plotTitle -e $plotEnd
 fi
-
-if [ "$fixedID" != "" ]
-then
-  fixedID="-f $fixedID"
-fi
-
-# plot
-python3 $scriptsPath/plot_performance.py -i $tmpOutput -o $outputPath $fixedID -t $plotTitle -e $plotEnd
