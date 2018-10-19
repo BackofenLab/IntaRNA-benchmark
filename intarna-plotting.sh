@@ -56,29 +56,22 @@ then
   exit;
 fi
 
-# if more than one file is given, merge them before plotting
-if (("${#callIDs[@]}" > 1))
+if [ "$fixedID" == "" ]
 then
-    if [ "$fixedID" == "" ]
-    then
-      echo "Please specify a reference curve for the violin plot using -f <callID>!"
-      exit;
-    fi
-
-  # unique output file
-  tmpOutput="./tmp/mergedBenchmark_$(date +%Y%m%d%H%M%S).csv"
-
-  # merge benchmarks
-  if [ "$all" == true ]
-  then
-    python3 $scriptsPath/mergeBenchmarks.py -b $callIDs -d $inputPath -o $tmpOutput -a
-  else
-    python3 $scriptsPath/mergeBenchmarks.py -b $callIDs -d $inputPath -o $tmpOutput
-  fi
-
-  # plot
-  python3 $scriptsPath/plot_performance.py -i $tmpOutput -f ${fixedID} -o $outputPath $fixedID -t $plotTitle -e $plotEnd
-else
-  # plot
-  python3 $scriptsPath/plot_performance.py -i $inputPath/${callIDs[0]}/benchmark.csv -f ${callIDs[0]} -o $outputPath $fixedID -t $plotTitle -e $plotEnd
+  echo "Please specify a reference curve for the violin plot using -f <callID>!"
+  exit;
 fi
+
+# unique output file
+tmpOutput="./tmp/mergedBenchmark_$(date +%Y%m%d%H%M%S).csv"
+
+# merge benchmarks
+if [ "$all" == true ]
+then
+  python3 $scriptsPath/mergeBenchmarks.py -b $callIDs -d $inputPath -o $tmpOutput -a
+else
+  python3 $scriptsPath/mergeBenchmarks.py -b $callIDs -d $inputPath -o $tmpOutput
+fi
+
+# plot
+python3 $scriptsPath/plot_performance.py -i $tmpOutput -f ${fixedID} -o $outputPath $fixedID -t $plotTitle -e $plotEnd

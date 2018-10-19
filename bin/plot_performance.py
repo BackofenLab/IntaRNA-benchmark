@@ -53,7 +53,7 @@ def main(argv):
     parser = argparse.ArgumentParser(description="Script for plotting the benchmark results")
     parser.add_argument("-i", "--ifile", action="store", dest="benchmarkFile", default=os.path.join("")
                         , help="Mandatory benchmark file to be used for plotting.")
-    parser.add_argument("-o", "--ofile", action="store", dest="outFile", default=os.path.join("..", "output", "intaRNA2_benchmark.pdf")
+    parser.add_argument("-o", "--ofile", action="store", dest="outFile", default=os.path.join(".", "output", "intaRNA2_benchmark.pdf")
                         , help="the path of the outputFilePath.")
     parser.add_argument("-s", "--sep", action="store", dest="separator", default=";"
                         , help="specify the separator used by the benchmark file.")
