@@ -23,9 +23,10 @@ all=false
 fixedID=""
 plotTitle="''"
 plotEnd="200"
+remove=false
 
 # Handling input
-while getopts "h?i:o:c:b:f:t:e:a" opt; do
+while getopts "h?i:o:c:b:f:t:e:ra" opt; do
     case "$opt" in
     h|\?)
         exit 0
@@ -46,6 +47,8 @@ while getopts "h?i:o:c:b:f:t:e:a" opt; do
         ;;
     e)  plotEnd=$OPTARG
         ;;
+    r)  remove=true
+        ;;
     esac
 done
 
@@ -64,14 +67,22 @@ fi
 
 # unique output file
 tmpOutput="./tmp/mergedBenchmark_$(date +%Y%m%d%H%M%S).csv"
+mkdir -p ./tmp
+mkdir -p ./plots
 
 # merge benchmarks
 if [ "$all" == true ]
 then
-  python3 $scriptsPath/mergeBenchmarks.py -b $callIDs -d $inputPath -o $tmpOutput -a
+  python3 $scriptsPath/mergeBenchmarks.py -c ${callIDs[@]} -d $inputPath -o $tmpOutput -a
 else
-  python3 $scriptsPath/mergeBenchmarks.py -b $callIDs -d $inputPath -o $tmpOutput
+  python3 $scriptsPath/mergeBenchmarks.py -c ${callIDs[@]} -d $inputPath -o $tmpOutput
 fi
 
 # plot
-python3 $scriptsPath/plot_performance.py -i $tmpOutput -f ${fixedID} -o $outputPath $fixedID -t $plotTitle -e $plotEnd
+python3 $scriptsPath/plot_performance.py -i $tmpOutput -f $fixedID -o $outputPath -t $plotTitle -e $plotEnd
+
+# remove temporary files if wanted
+if [ "$remove" == true ]
+then
+  rm "${tmpOutput%.csv}"*
+fi

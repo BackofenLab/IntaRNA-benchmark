@@ -31,18 +31,18 @@ def mergeBenchmarks(benchList, outputPath):
 
 
 # Merge method for memory and time files
-def mergeLogFiles(benchIDList, benchPath, outputpath):
-    timeDF = pd.read_csv(os.path.join(benchPath, benchIDList[0], "runTime.csv"), sep=";", header=0)
-    memoryDF = pd.read_csv(os.path.join(benchPath, benchIDList[0], "memoryUsage.csv"), sep=";", header=0)
-    for benchID in benchIDList[1:]:
-        nextTimeDF = pd.read_csv(os.path.join(benchPath, benchID, "runTime.csv"), sep=";", header=0)
-        nextMemoryDF = pd.read_csv(os.path.join(benchPath, benchID, "memoryUsage.csv"), sep=";", header=0)
+def mergeLogFiles(callIDList, benchPath, outputpath):
+    timeDF = pd.read_csv(os.path.join(benchPath, callIDList[0], "runTime.csv"), sep=";", header=0)
+    memoryDF = pd.read_csv(os.path.join(benchPath, callIDList[0], "memoryUsage.csv"), sep=";", header=0)
+    for callID in callIDList[1:]:
+        nextTimeDF = pd.read_csv(os.path.join(benchPath, callID, "runTime.csv"), sep=";", header=0)
+        nextMemoryDF = pd.read_csv(os.path.join(benchPath, callID, "memoryUsage.csv"), sep=";", header=0)
 
         # Concatenate next dataframes
         timeDF = pd.concat([timeDF, nextTimeDF]).drop_duplicates().reset_index(drop=True)
         memoryDF = pd.concat([memoryDF, nextMemoryDF]).drop_duplicates().reset_index(drop=True)
 
-    # Sort dataframes according to their benchID
+    # Sort dataframes according to their callID
     timeDF = timeDF.sort_values("callID")
     memoryDF = memoryDF.sort_values("callID")
 
@@ -59,13 +59,12 @@ def main(argv):
                         , help="Mandatory path and name for the outputfile.")
     parser.add_argument("-d", "--bdirs", action="store", dest="benchFilePath", default=os.path.join(".", "output")
                         , help=" path to the benchmark folders.")
-    parser.add_argument("-b", "--benchID", nargs="*", dest="benchIDs", default=""
-                        , help="a mandatory ID to differentiate between multiple calls of the script. Specify multiple ones by using benchID1 benchID2 ...")
+    parser.add_argument("-c", "--callID", nargs="*", dest="callIDs", default=""
+                        , help="a mandatory ID to differentiate between multiple calls of the script. Specify multiple ones by using callID1 callID2 ...")
     parser.add_argument("-a", "--all", action="store_true", dest="all", default=False
                         , help="When set all available benchmark folders will be merged.")
     args = parser.parse_args()
 
-    print(args.benchIDs)
     # Enforce an outputfile path/name.csv
     if args.outputfile == "":
         sys.exit("Please use: python3 mergeBenchmarks.py -o <path/name.csv> to specify an output file!")
@@ -74,21 +73,21 @@ def main(argv):
     allIDfolders = [x for x in glob.glob(os.path.join(args.benchFilePath, "*")) if os.path.isdir(x)]
 
     if not args.all:
-        # Check whether benchIDs were given
-        if len(args.benchIDs) < 2:
-            sys.exit("Please specify atleast two benchIDs using python3 mergeBenchmarks -b <name1 name2>")
+        # Check whether callIDs were given
+        if len(args.callIDs) < 2:
+            sys.exit("Please specify atleast two callIDs using python3 mergeBenchmarks -c <name1 name2>")
 
         toBeMerged = []
-        existingBenchIDs = []
-        for bID in args.benchIDs:
+        existingCallIDs = []
+        for bID in args.callIDs:
             for folder in allIDfolders:
                 if bID == folder.split(os.path.sep)[-1]:
                     toBeMerged.append(os.path.join(folder, args.infileName))
-                    existingBenchIDs.append(bID)
+                    existingCallIDs.append(bID)
 
         if len(toBeMerged) > 1:
             mergeBenchmarks(toBeMerged, args.outputfile)
-            mergeLogFiles(existingBenchIDs, args.benchFilePath, args.outputfile)
+            mergeLogFiles(existingCallIDs, args.benchFilePath, args.outputfile)
         else:
             sys.exit("Not enough files to merge!")
 
