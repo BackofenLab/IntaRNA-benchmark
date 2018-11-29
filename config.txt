@@ -1,0 +1,79 @@
+[general]
+colorList=#3cb44b, #0082c8, #f58231, #911eb4, #46f0f0, #d2f53c, #fabebe, #008080, #e6beff, #aa6e28, #800000, #ffe119, #aaffc3, #808000, #000080, #808080, #f032e6
+end=200
+
+[title]
+fontsize=20
+tight_layout=0 0.03 1 0.95
+
+[body]
+# general
+subplotsizeX=14
+subplotsizeY=6
+fontsize=16
+xlabel=# Target predictions per sRNA
+ylabel=# True positive
+
+# limits
+# limtypes: range (min to max), min (min only), max (max only), none (none enables matplotlib to decide the plot boundaries)
+limtypeX=none
+minX=0
+maxX=100
+limtypeY=none
+minY=0
+maxY=100
+
+# scale
+xscale=
+yscale=
+
+[violin]
+# general
+fontsize=16
+xlabel=
+xlabelpos=bottom
+xtickspos=bottom
+ylabel=true positive deviation
+ylabelpos=right
+ytickspos=right
+edgecolor=black
+alpha=1
+
+# violin parts
+cbars_edgecolor=black
+cbars_linestyle=-
+cmins_edgecolor=black
+cmins_linestyle=-
+cmaxes_edgecolor=black
+cmaxes_linestyle=-
+cmeans_edgecolor=black
+cmeans_linestyle=-
+cmedians_edgecolor=black
+cmedians_linestyle=--
+
+# setting that are equal in both time and memory plots
+[additionalplots]
+title=Time and memory consumption
+fontsize=20
+tight_layout=0 0.03 1 0.95
+
+[time]
+fontsize=16
+ylabel=time (in minutes)
+ylabelpos=left
+ytickspos=left
+
+[memory]
+fontsize=16
+ylabel=memory (in megabytes)
+ylabelpos=right
+ytickspos=right
+
+[legend]
+loc=lower right
+fontsize=14
+
+[axisstyle]
+xticksPos=bottom
+xticksFontsize=12
+xticksRotation=0

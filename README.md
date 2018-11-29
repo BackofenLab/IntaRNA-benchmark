@@ -94,6 +94,22 @@ The ranks are then stored in a CSV file.
 __Default Output:__ (contained in the respective `callID` folder)
 * benchmark.csv -> file containing the rank for each verified interaction.
 
+#### plot.py
+
+__Parameters:__
+* __benchmarkFile (`-i`)__ mandatory benchmark file used to plot the results. (created using benchmark.py eventually in compination with mergeBenchmarks.py)
+* __outputFilePath (`-o`)__ the location and name of the output file. Default: IntaRNA2_benchmark.pdf .
+* __separator (`-s`)__ separator used for the csv files. Default: `;`
+* __config (`-c`)__ path to the required configuration file.
+* __title (`-t`)__ the title of the main plot (currently not in config file to allow easier changing via script).
+* __referenceID (`-r`)__ the ID used to create the reference curve for violin plots.
+* __plottype (`-p`)__ the type of plot required (violin / TODO / TODO).
+* __plottype (`-a`)__ create additional plots for the time and memory consumption.
+
+__THIS SCRIPT WILL REPLACE ALL OTHER PLOTTING SCRIPTS. KEY FUNCTIONALITY ALREADY AVAILABLE__
+This plotting script requires a `config.txt` as provided in the github repository. This allows a complete costumization of the plots without changing the code.
+The script can currently output combined ROC/violin plots showing the performance of a given IntaRNA call.
+Further, it can also plot the time and memory consumption for the given call.
 
 #### plot_performance.py
 
@@ -105,7 +121,7 @@ __Parameters:__
 * __xlim (`-x`)__ specify an x-limit for the output. x_start/x_end (x is already bound by end, changing might lead to strange results)
 * __ylim (`-y`)__ specify an y-limit for the output. y_start/y_end
 
-__Under Construction: use plot_boxes__
+__UNDER REPLACEMENT: Will be removed after plot.py script is fully functional__
 This script uses a benchmark.csv file created by the `benchmark.py` script.
 For each callID present in the benchmark file, the ranks are used to create a receiver operating characteristic (ROC) curve.
 For each step from 1 to "end(200)" the number of ranks that are smaller or equal to the current step are recorded.
