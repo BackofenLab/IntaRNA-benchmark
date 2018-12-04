@@ -1,18 +1,16 @@
 #!/bin/bash
-#$ -N intaRNA-benchmark
+#$ -N intaRNA-plotting
 #$ -cwd
 #$ -pe smp 1
 #$ -l h_vmem=2G
-#$ -o <folder path>
-#$ -e <folder path>
+#$ -o /scratch/bi03/gelhausr/intaRNA/IntaRNA-benchmark/
+#$ -e /scratch/bi03/gelhausr/intaRNA/IntaRNA-benchmark/
 #$ -j y
-#$ -M <email address>
-#$ -m a
 
 # This script will require a conda environment with:
 # - python3 | pandas | matplotlib
-export PATH="<path to miniconda>/miniconda3/bin/:$PATH"
-cd <path to the working folder>
+export PATH="/scratch/bi03/gelhausr/miniconda3/bin/:$PATH"
+cd /scratch/bi03/gelhausr/intaRNA/IntaRNA-benchmark/
 source activate intarna-plotting
 
 # Variables
@@ -20,13 +18,14 @@ scriptsPath="./bin/"
 inputPath="./output/"
 outputPath="./plots/intaRNA.pdf"
 all=false
-fixedID=""
+referenceID=""
 plotTitle="''"
-plotEnd="200"
-remove=false
+delete=false
+additional=false
+config="./config.txt"
 
 # Handling input
-while getopts "h?i:o:c:b:f:t:e:ra" opt; do
+while getopts "h?i:o:c:b:f:t:p:r:f:dam" opt; do
     case "$opt" in
     h|\?)
         exit 0
@@ -41,14 +40,17 @@ while getopts "h?i:o:c:b:f:t:e:ra" opt; do
         ;;
     a)  all=true
         ;;
-    f)  fixedID=$OPTARG
+    r)  referenceID=$OPTARG
         ;;
     t)  plotTitle=$OPTARG
         ;;
-    e)  plotEnd=$OPTARG
+    p)  plottype=$OPTARG
         ;;
-    r)  remove=true
+    d)  delete=true
         ;;
+    f)  config=$OPTARG
+        ;;
+    m)  additional=true
     esac
 done
 
@@ -59,9 +61,9 @@ then
   exit;
 fi
 
-if [ "$fixedID" == "" ]
+if [ "$referenceID" == "''" ]
 then
-  echo "Please specify a reference curve for the violin plot using -f <callID>!"
+  echo "Please specify a reference curve for the violin plot using -r <callID>!"
   exit;
 fi
 
@@ -79,10 +81,15 @@ else
 fi
 
 # plot
-python3 $scriptsPath/plot_performance.py -i $tmpOutput -f $fixedID -o $outputPath -t $plotTitle -e $plotEnd
+if [ "$additional" == true ] 
+then
+  python3 $scriptsPath/plot.py -i $tmpOutput --referenceID $referenceID -o $outputPath -t "$plotTitle" --config $config --plottype $plottype --additional
+else
+  python3 $scriptsPath/plot.py -i $tmpOutput --referenceID $referenceID -o $outputPath -t "$plotTitle" --config $config --plottype $plottype
+fi
 
 # remove temporary files if wanted
-if [ "$remove" == true ]
+if [ "$delete" == true ]
 then
   rm "${tmpOutput%.csv}"*
 fi
