@@ -75,26 +75,27 @@ def main(argv):
         for organism in organisms:
             if (srna_name, organism) in confirmed_hybrids:
                 for confirmed_hybrid in confirmed_hybrids[(srna_name, organism)]:
-
+                    # redo for each file containing srna_name organism (currently 1)
                     for file in srnaDict[(srna_name, organism)]:
                         try:
                             df = pd.read_csv(file, sep=";", header=0)
                         except pd.errors.ParserError as err:
                             errorMessage = "%s      in file %s \n\nPlease contact the IntaRNA development team." % (err, file)
                             sys.exit(errorMessage)
-                        df = df.sort_values("E")
+                        # round the energys and sort the dataFrame accordingly
+                        df = df.round({"E": 2})
+                        df = df.sort_values(by=["E","id1"])
 
                         target_ltag = confirmed_hybrid[0]
                         target_name = confirmed_hybrid[1]
 
                         try:
-                            # Uses first column, maybe use id1 instead
-                            # Adding 1 because df.ix[:,0] ignores the header and list starts with 0. Adding 1 fixes it.
-                            intaRNA_rank = list(df.ix[:,0]).index(target_ltag) + 1
+                            # Calculate the real rank
+                            intaRNA_rank = len(set(list(df["E"])[0:list(df["id1"]).index(target_ltag)+1]))
 
                             outputText += "%s;%s;%s;%s\n" % (srna_name, target_ltag, target_name, intaRNA_rank)
                         except ValueError:
-                            outputText += "%s;%s;%s;%s\n" % (srna_name, target_ltag, target_name, 99999)
+                            outputText += "%s;%s;%s;%s\n" % (srna_name, target_ltag, target_name, sys.maxint)
 
     # Check whether the outputFile is empty
     if outputText == "srna_name;target_ltag;target_name;intarna_rank\n":
