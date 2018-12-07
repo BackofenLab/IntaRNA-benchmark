@@ -215,31 +215,25 @@ def plot_time_and_memory(args, config):
         index, data = row
         timeDict[timeDF.iloc[index]["callID"]] += data.tolist()[3:]
 
+
+    # Handle the reference ID
+    timeData = []
+    refData = timeDict[args.referenceID]
+    timeDict.pop(args.referenceID, None)
+
     keys = list(timeDict.keys())
     # sort the list on keys in a human readable form
     human_sort(keys)
 
-    # Handle the reference ID
-    timeData = []
-    if args.referenceID != "":
-        keys.remove(args.referenceID)
-    for key in keys:
-        timeData.append(timeDict[key])
-
-    if args.referenceID != "":
-        timeData = [timeDict[args.referenceID]] + timeData
-
     # Convert time from sec to min
-    timeData = [[y/60 for y in x] for x in timeData]
+    for key in keys:
+        timeData.append(list(map(operator.sub, timeDict[key], refData)))
 
-    # color list handling
-    colorlist = config["general"]["colorList"].split(", ")
-    if args.referenceID != "":
-        colorlist = ["red"] + colorlist
+    timeData = [[y/60 for y in x] for x in timeData]
 
     violin_parts = ax1.violinplot(timeData, showextrema=True, showmeans=True, showmedians=True)
     for idx, pc in enumerate(violin_parts['bodies']):
-        pc.set_facecolor(colorlist[idx])
+        pc.set_facecolor(config["general"]["colorList"].split(", ")[idx])
         pc.set_edgecolor(config["violin"]["edgecolor"])
         pc.set_alpha(float(config["violin"]["alpha"]))
 
@@ -263,11 +257,15 @@ def plot_time_and_memory(args, config):
     violin_parts["cmedians"].set_edgecolor(config["violin"]["cmedians_edgecolor"])
     violin_parts["cmedians"].set_linestyle(config["violin"]["cmedians_linestyle"])
 
+    ax1.axhline(y=0, color="red", linestyle="-", zorder=0)
+
     # label positioning
     ax1.axes.set_ylabel(config["time"]["ylabel"], fontsize=int(config["time"]["fontsize"]))
     ax1.axes.yaxis.set_label_position(config["time"]["ylabelpos"])
     ax1.axes.yaxis.set_ticks_position(config["time"]["ytickspos"])
     ax1.axes.set_xticks([])
+
+    set_axis_style(ax1, keys, config)
 
     #####################################################################################################
     #                                          Memory PLOT                                              #
@@ -280,20 +278,22 @@ def plot_time_and_memory(args, config):
         index, data = row
         memoryDict[memoryDF.iloc[index]["callID"]] += data.tolist()[3:]
 
+    # Handle the reference ID
+    memoryData = []
+    refData = memoryDict[args.referenceID]
+    memoryDict.pop(args.referenceID, None)
+
     keys = list(memoryDict.keys())
+    # sort the list on keys in a human readable form
     human_sort(keys)
 
-    memoryData = []
-    if args.referenceID != "":
-        keys.remove(args.referenceID)
+    # Convert time from sec to min
     for key in keys:
-        memoryData.append(memoryDict[key])
-    if args.referenceID != "":
-        memoryData = [memoryDict[args.referenceID]] + memoryData
+        memoryData.append(list(map(operator.sub, memoryDict[key], refData)))
 
     violin_parts = ax2.violinplot(memoryData, showextrema=True, showmeans=True, showmedians=True)
     for idx, pc in enumerate(violin_parts['bodies']):
-        pc.set_facecolor(colorlist[idx])
+        pc.set_facecolor(config["general"]["colorList"].split(", ")[idx])
         pc.set_edgecolor(config["violin"]["edgecolor"])
         pc.set_alpha(float(config["violin"]["alpha"]))
 
@@ -323,10 +323,8 @@ def plot_time_and_memory(args, config):
     ax2.axes.yaxis.set_ticks_position(config["memory"]["ytickspos"])
     ax2.axes.set_xticks([])
 
-    if args.referenceID != "":
-        keys = [args.referenceID] + keys
+    ax2.axhline(y=0, color="red", linestyle="-", zorder=0)
 
-    set_axis_style(ax1, keys, config)
     set_axis_style(ax2, keys, config)
 
     plt.suptitle(config["additionalplots"]["title"], fontsize=int(config["additionalplots"]["fontsize"]))
