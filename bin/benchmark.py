@@ -95,7 +95,7 @@ def main(argv):
 
                             outputText += "%s;%s;%s;%s\n" % (srna_name, target_ltag, target_name, intaRNA_rank)
                         except ValueError:
-                            outputText += "%s;%s;%s;%s\n" % (srna_name, target_ltag, target_name, sys.maxint)
+                            outputText += "%s;%s;%s;%s\n" % (srna_name, target_ltag, target_name, sys.maxsize)
 
     # Check whether the outputFile is empty
     if outputText == "srna_name;target_ltag;target_name;intarna_rank\n":
