@@ -48,16 +48,24 @@ def set_axis_limits(ax, config):
     if config["body"]["limtypeX"] == "range":
         ax.axes.set_xlim(int(config["body"]["minX"]), int(config["body"]["maxX"]))
     elif config["body"]["limtypeX"] == "min":
-        ax.axes.set_xlim(xmin=int(config["body"]["minX"]))
+        ax.axes.set_xlim(left=int(config["body"]["minX"]))
     elif config["body"]["limtypeX"] == "max":
-        ax.axes.set_xlim(xmax=int(config["body"]["maxX"]))
+        ax.axes.set_xlim(right=int(config["body"]["maxX"]))
 
     if config["body"]["limtypeY"] == "range":
         ax.axes.set_ylim(int(config["body"]["minY"]), int(config["body"]["maxY"]))
     elif config["body"]["limtypeY"] == "min":
-        ax.axes.set_ylim(ymin=int(config["body"]["minY"]))
+        ax.axes.set_ylim(bottom=int(config["body"]["minY"]))
     elif config["body"]["limtypeY"] == "max":
-        ax.axes.set_ylim(ymax=int(config["body"]["maxY"]))
+        ax.axes.set_ylim(top=int(config["body"]["maxY"]))
+
+def set_violin_limits(ax, config):
+    if config["violin"]["limtypeY"] == "range":
+        ax.axes.set_ylim(int(config["violin"]["minY"]), int(config["violin"]["maxY"]))
+    elif config["violin"]["limtypeY"] == "min":
+        ax.axes.set_ylim(bottom=int(config["violin"]["minY"]))
+    elif config["violin"]["limtypeY"] == "max":
+        ax.axes.set_ylim(top=int(config["violin"]["maxY"]))
 
 def determine_ranks(args, config):
     benchDF = pd.read_csv(args.inputFile, sep=args.separator, header=0)
@@ -168,6 +176,8 @@ def plot_merged(args, config):
     ax2.axes.yaxis.set_label_position(config["violin"]["ylabelpos"])
     ax2.axes.yaxis.set_ticks_position(config["violin"]["ytickspos"])
     ax2.axes.set_xticks([])
+
+    set_violin_limits(ax2, config)
 
     ax2.axhline(y=0, color="red", linestyle="-", zorder=0)
 
