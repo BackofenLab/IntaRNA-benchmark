@@ -286,18 +286,18 @@ def plot_time_and_memory(args, config):
 
     for row in memoryDF.iterrows():
         index, data = row
-        memoryDict[memoryDF.iloc[index]["callID"]] += data.tolist()[3:]
+        memoryDict[memoryDF.iloc[index]["callID"]] += [x / 1024 for x in data.tolist()[3:]]
 
     # Handle the reference ID
     memoryData = []
-    refData = memoryDict[args.referenceID]
+    refData = [x / 1024 for x in memoryDict[args.referenceID]]
     memoryDict.pop(args.referenceID, None)
 
     keys = list(memoryDict.keys())
     # sort the list on keys in a human readable form
     human_sort(keys)
 
-    # Convert time from sec to min
+    # Convert memory from kb to mb
     for key in keys:
         memoryData.append(list(map(operator.sub, memoryDict[key], refData)))
 
