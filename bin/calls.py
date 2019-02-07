@@ -104,10 +104,8 @@ def main(argv):
                     # if user enables threading, also add it to the precomputation of target ED values
                     if "threads " in cmdLineArgs:
                         call += " --threads " + cmdLineArgs.split("threads ")[-1].split(" ")[0]
-                        threads = cmdLineArgs.split("threads ")[-1].split(" ")[0]
                     elif "threads=" in cmdLineArgs:
                         call += " --threads=" + cmdLineArgs.split("threads=")[-1].split(" ")[0]
-                        threads = cmdLineArgs.split("threads=")[-1].split(" ")[0]
 
                     # call
                     callArgs = shlex.split(call, posix=False)
