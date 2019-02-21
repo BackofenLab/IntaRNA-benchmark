@@ -65,7 +65,7 @@ tight_layout=0 0.03 1 0.95
 
 [time]
 fontsize=16
-ylabel=time (in minutes)
+ylabel=time increase (in %%)
 ylabelpos=left
 ytickspos=left
 
