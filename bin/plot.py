@@ -48,16 +48,24 @@ def set_axis_limits(ax, config):
     if config["body"]["limtypeX"] == "range":
         ax.axes.set_xlim(int(config["body"]["minX"]), int(config["body"]["maxX"]))
     elif config["body"]["limtypeX"] == "min":
-        ax.axes.set_xlim(xmin=int(config["body"]["minX"]))
+        ax.axes.set_xlim(left=int(config["body"]["minX"]))
     elif config["body"]["limtypeX"] == "max":
-        ax.axes.set_xlim(xmax=int(config["body"]["maxX"]))
+        ax.axes.set_xlim(right=int(config["body"]["maxX"]))
 
     if config["body"]["limtypeY"] == "range":
         ax.axes.set_ylim(int(config["body"]["minY"]), int(config["body"]["maxY"]))
     elif config["body"]["limtypeY"] == "min":
-        ax.axes.set_ylim(ymin=int(config["body"]["minY"]))
+        ax.axes.set_ylim(bottom=int(config["body"]["minY"]))
     elif config["body"]["limtypeY"] == "max":
-        ax.axes.set_ylim(ymax=int(config["body"]["maxY"]))
+        ax.axes.set_ylim(top=int(config["body"]["maxY"]))
+
+def set_violin_limits(ax, config):
+    if config["violin"]["limtypeY"] == "range":
+        ax.axes.set_ylim(int(config["violin"]["minY"]), int(config["violin"]["maxY"]))
+    elif config["violin"]["limtypeY"] == "min":
+        ax.axes.set_ylim(bottom=int(config["violin"]["minY"]))
+    elif config["violin"]["limtypeY"] == "max":
+        ax.axes.set_ylim(top=int(config["violin"]["maxY"]))
 
 def determine_ranks(args, config):
     benchDF = pd.read_csv(args.inputFile, sep=args.separator, header=0)
@@ -169,6 +177,8 @@ def plot_merged(args, config):
     ax2.axes.yaxis.set_ticks_position(config["violin"]["ytickspos"])
     ax2.axes.set_xticks([])
 
+    set_violin_limits(ax2, config)
+
     ax2.axhline(y=0, color="red", linestyle="-", zorder=0)
 
     # Set the title, if given
@@ -215,7 +225,6 @@ def plot_time_and_memory(args, config):
         index, data = row
         timeDict[timeDF.iloc[index]["callID"]] += data.tolist()[3:]
 
-
     # Handle the reference ID
     timeData = []
     refData = timeDict[args.referenceID]
@@ -227,9 +236,12 @@ def plot_time_and_memory(args, config):
 
     # Convert time from sec to min
     for key in keys:
-        timeData.append(list(map(operator.sub, timeDict[key], refData)))
+        timeIncrease = list(map(operator.sub, timeDict[key], refData))
+        timeIncreasePercentage= [x/y for x,y in zip(timeIncrease,timeDict[key])] #(timeIncrease / timeDict) *100
+        timeData.append([x*100 for x in timeIncreasePercentage])
 
-    timeData = [[y/60 for y in x] for x in timeData]
+    #timeData = [[y/(60) for y in x] for x in timeData]
+    #print(timeData)
 
     violin_parts = ax1.violinplot(timeData, showextrema=True, showmeans=True, showmedians=True)
     for idx, pc in enumerate(violin_parts['bodies']):
@@ -276,7 +288,7 @@ def plot_time_and_memory(args, config):
 
     for row in memoryDF.iterrows():
         index, data = row
-        memoryDict[memoryDF.iloc[index]["callID"]] += data.tolist()[3:]
+        memoryDict[memoryDF.iloc[index]["callID"]] +=  data.tolist()[3:]
 
     # Handle the reference ID
     memoryData = []
@@ -287,9 +299,10 @@ def plot_time_and_memory(args, config):
     # sort the list on keys in a human readable form
     human_sort(keys)
 
-    # Convert time from sec to min
+    # Convert memory from kb to mb
     for key in keys:
-        memoryData.append(list(map(operator.sub, memoryDict[key], refData)))
+        memoryKB = list(map(operator.sub, memoryDict[key], refData))
+        memoryData.append([x / 1024 for x in memoryKB])
 
     violin_parts = ax2.violinplot(memoryData, showextrema=True, showmeans=True, showmedians=True)
     for idx, pc in enumerate(violin_parts['bodies']):

@@ -51,6 +51,12 @@ cmeans_linestyle=-
 cmedians_edgecolor=black
 cmedians_linestyle=--
 
+#limits
+# limtypes: min (min only), max (max only), none (none enables matplotlib to decide the plot boundaries)
+limtypeY=none
+minY=0
+maxY=10
+
 # setting that are equal in both time and memory plots
 [additionalplots]
 title=Time and memory consumption
@@ -59,7 +65,7 @@ tight_layout=0 0.03 1 0.95
 
 [time]
 fontsize=16
-ylabel=time (in minutes)
+ylabel=time increase (in %%)
 ylabelpos=left
 ytickspos=left
 
