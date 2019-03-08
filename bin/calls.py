@@ -93,7 +93,7 @@ def main(argv):
 
             for target in target_files:
                 target_name = os.path.basename(os.path.splitext(target)[0])
-                edValueFolder = os.path.join(".", "ED-values", organism, target_name)
+                edValueFolder = os.path.join(args.outputPath, "ED-values", organism, target_name)
                 if not os.path.exists(edValueFolder):
                     os.makedirs(edValueFolder)
                     call = args.intaRNAbinary + " -q " + "AAAAAAAA" \
@@ -165,7 +165,7 @@ def main(argv):
 
                 if (args.enabledTargetED):
                     call += " --tAcc=E --tAccFile=" \
-                            + os.path.join(".", "ED-values", organism, target_name, "intarna.target.ed") \
+                            + os.path.join(args.outputPath, "ED-values", organism, target_name, "intarna.target.ed") \
                             + " --tIntLenMax 150"
 
                 # get the number of used threads
