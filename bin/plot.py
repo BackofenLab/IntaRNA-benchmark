@@ -189,18 +189,14 @@ def plot_merged(args, config):
     plt.savefig(args.outputFile)
     plt.close()
 
-def plot_time_and_memory(args, config):
+def plot_time(args, config):
     runTimeFile = os.path.splitext(args.inputFile)[0] + "_runTimes.csv"
-    memoryFile = os.path.splitext(args.inputFile)[0] + "_MaxMemoryUsage.csv"
 
     if not os.path.exists(runTimeFile):
         sys.exit("no runTimeFile found!!")
-    if not os.path.exists(memoryFile):
-        sys.exit("no maxMemoryUsage file found!!")
 
     # Read the csv files
     timeDF = pd.read_csv(runTimeFile, sep=args.separator, header=0)
-    memoryDF = pd.read_csv(memoryFile, sep=args.separator, header=0)
     benchDF = pd.read_csv(args.inputFile, sep=args.separator, header=0)
 
     prefix = ["srna_name", "target_ltag", "target_name"]
@@ -211,6 +207,7 @@ def plot_time_and_memory(args, config):
 
     # Create a subplot
     fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(14,6))
+    colorcycler = cycle(config["general"]["colorList"].split(", "))
 
     #####################################################################################################
     #                                            TIME PLOT                                              #
@@ -223,27 +220,48 @@ def plot_time_and_memory(args, config):
     # Read the values into the time dictionary
     for row in timeDF.iterrows():
         index, data = row
-        timeDict[timeDF.iloc[index]["callID"]] += data.tolist()[3:]
+        timeDict[timeDF.iloc[index]["callID"]] = [x / 60 for x in data.tolist()[3:]]
 
     # Handle the reference ID
-    timeData = []
     refData = timeDict[args.referenceID]
-    timeDict.pop(args.referenceID, None)
 
     keys = list(timeDict.keys())
     # sort the list on keys in a human readable form
     human_sort(keys)
 
-    # Convert time from sec to min
+    # sort times by reference data
+    sorted_index = [i for (v, i) in sorted((v, i) for (i, v) in enumerate(refData))]
+    for key in keys:
+        timeDict[key] = [timeDict[key][i] for i in sorted_index]
+
+    # Check keys and plot the referenceID in red.
+    # The other keys are colored according to the given color list.
+    for key in keys:
+        if key == args.referenceID:
+            ax1.plot(timeDict[key], label=args.referenceID, color="red", zorder=30)
+            continue
+
+        ax1.plot(timeDict[key], label=key, color=next(colorcycler))
+
+    # Create the legend
+    ax1.legend(loc="upper left", fontsize=int(config["legend"]["fontsize"]))
+    ax1.axes.set_ylabel(config["time"]["ylabelleft"], fontsize=int(config["time"]["fontsize"]))
+    ax1.axes.set_xlabel(config["time"]["xlabel"], fontsize=int(config["body"]["fontsize"]))
+
+    set_axis_limits(ax1, config)
+
+    # =========================================================================
+    timeDict.pop(args.referenceID, None)
+    timeData = []
+    keys = list(timeDict.keys())
+    human_sort(keys)
+
     for key in keys:
         timeIncrease = list(map(operator.sub, timeDict[key], refData))
         timeIncreasePercentage= [x/y for x,y in zip(timeIncrease,timeDict[key])] #(timeIncrease / timeDict) *100
         timeData.append([x*100 for x in timeIncreasePercentage])
 
-    #timeData = [[y/(60) for y in x] for x in timeData]
-    #print(timeData)
-
-    violin_parts = ax1.violinplot(timeData, showextrema=True, showmeans=True, showmedians=True)
+    violin_parts = ax2.violinplot(timeData, showextrema=True, showmeans=True, showmedians=True)
     for idx, pc in enumerate(violin_parts['bodies']):
         pc.set_facecolor(config["general"]["colorList"].split(", ")[idx])
         pc.set_edgecolor(config["violin"]["edgecolor"])
@@ -269,40 +287,97 @@ def plot_time_and_memory(args, config):
     violin_parts["cmedians"].set_edgecolor(config["violin"]["cmedians_edgecolor"])
     violin_parts["cmedians"].set_linestyle(config["violin"]["cmedians_linestyle"])
 
-    ax1.axhline(y=0, color="red", linestyle="-", zorder=0)
+    ax2.axhline(y=0, color="red", linestyle="-", zorder=0)
 
     # label positioning
-    ax1.axes.set_ylabel(config["time"]["ylabel"], fontsize=int(config["time"]["fontsize"]))
-    ax1.axes.yaxis.set_label_position(config["time"]["ylabelpos"])
-    ax1.axes.yaxis.set_ticks_position(config["time"]["ytickspos"])
-    ax1.axes.set_xticks([])
+    ax2.axes.set_ylabel(config["time"]["ylabelright"], fontsize=int(config["time"]["fontsize"]))
+    ax2.axes.yaxis.set_label_position(config["time"]["ylabelpos"])
+    ax2.axes.yaxis.set_ticks_position(config["time"]["ytickspos"])
+    ax2.axes.set_xticks([])
 
-    set_axis_style(ax1, keys, config)
+    set_axis_style(ax2, keys, config)
+
+    plt.suptitle(config["additionalplots"]["title"], fontsize=int(config["additionalplots"]["fontsize"]))
+
+    for tick in ax1.get_xticklabels():
+        tick.set_rotation(float(config["axisstyle"]["xticksRotation"]))
+    for tick in ax2.get_xticklabels():
+        tick.set_rotation(float(config["axisstyle"]["xticksRotation"]))
+
+    plt.tight_layout(rect=[float(x) for x in config["additionalplots"]["tight_layout"].split(" ")])
+    plt.savefig(os.path.splitext(args.outputFile)[0] + "_runtime.pdf")
+    plt.close()
+
+def plot_memory(args, config):
+    memoryFile = os.path.splitext(args.inputFile)[0] + "_MaxMemoryUsage.csv"
+
+    if not os.path.exists(memoryFile):
+        sys.exit("no maxMemoryUsage file found!!")
+
+    # Read the csv files
+    memoryDF = pd.read_csv(memoryFile, sep=args.separator, header=0)
+    benchDF = pd.read_csv(args.inputFile, sep=args.separator, header=0)
+
+    prefix = ["srna_name", "target_ltag", "target_name"]
+    # remove the _intarna_rank suffixes
+    intarnaIDs = [x.replace("_intarna_rank", "") for x in benchDF.columns if x not in prefix]
+    # Sort ids in a human readable form
+    human_sort(intarnaIDs)
+
+    # Create a subplot
+    fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(14,6))
+    colorcycler = cycle(config["general"]["colorList"].split(", "))
 
     #####################################################################################################
-    #                                          Memory PLOT                                              #
+    #                                          MEMORY PLOT                                              #
     #####################################################################################################
+
     memoryDict = dict()
     for id in intarnaIDs:
         memoryDict[id] = []
 
     for row in memoryDF.iterrows():
         index, data = row
-        memoryDict[memoryDF.iloc[index]["callID"]] +=  data.tolist()[3:]
+        memoryDict[memoryDF.iloc[index]["callID"]] +=  [x / 1024 for x in data.tolist()[3:]]
 
     # Handle the reference ID
-    memoryData = []
     refData = memoryDict[args.referenceID]
-    memoryDict.pop(args.referenceID, None)
 
     keys = list(memoryDict.keys())
     # sort the list on keys in a human readable form
     human_sort(keys)
 
+    # sort times by reference data
+    sorted_index = [i for (v, i) in sorted((v, i) for (i, v) in enumerate(refData))]
+    for key in keys:
+        memoryDict[key] = [memoryDict[key][i] for i in sorted_index]
+
+    # Check keys and plot the referenceID in red.
+    # The other keys are colored according to the given color list.
+    for key in keys:
+        if key == args.referenceID:
+            ax1.plot(memoryDict[key], label=args.referenceID, color="red", zorder=30)
+            continue
+
+        ax1.plot(memoryDict[key], label=key, color=next(colorcycler))
+
+    # Create the legend
+    ax1.legend(loc="upper left", fontsize=int(config["legend"]["fontsize"]))
+    ax1.axes.set_ylabel(config["memory"]["ylabelleft"], fontsize=int(config["memory"]["fontsize"]))
+    ax1.axes.set_xlabel(config["memory"]["xlabel"], fontsize=int(config["body"]["fontsize"]))
+
+    set_axis_limits(ax1, config)
+
+    # =========================================================================
+    memoryDict.pop(args.referenceID, None)
+    memoryData = []
+    keys = list(memoryDict.keys())
+    human_sort(keys)
+
     # Convert memory from kb to mb
     for key in keys:
         memoryKB = list(map(operator.sub, memoryDict[key], refData))
-        memoryData.append([x / 1024 for x in memoryKB])
+        memoryData.append(memoryKB)
 
     violin_parts = ax2.violinplot(memoryData, showextrema=True, showmeans=True, showmedians=True)
     for idx, pc in enumerate(violin_parts['bodies']):
@@ -331,7 +406,7 @@ def plot_time_and_memory(args, config):
     violin_parts["cmedians"].set_linestyle(config["violin"]["cmedians_linestyle"])
 
     # label positioning
-    ax2.axes.set_ylabel(config["memory"]["ylabel"], fontsize=int(config["memory"]["fontsize"]))
+    ax2.axes.set_ylabel(config["memory"]["ylabelright"], fontsize=int(config["memory"]["fontsize"]))
     ax2.axes.yaxis.set_label_position(config["memory"]["ylabelpos"])
     ax2.axes.yaxis.set_ticks_position(config["memory"]["ytickspos"])
     ax2.axes.set_xticks([])
@@ -348,7 +423,7 @@ def plot_time_and_memory(args, config):
         tick.set_rotation(float(config["axisstyle"]["xticksRotation"]))
 
     plt.tight_layout(rect=[float(x) for x in config["additionalplots"]["tight_layout"].split(" ")])
-    plt.savefig(os.path.splitext(args.outputFile)[0] + "_info.pdf")
+    plt.savefig(os.path.splitext(args.outputFile)[0] + "_memory.pdf")
     plt.close()
 
 def main(argv):
@@ -361,14 +436,16 @@ def main(argv):
                         , help="separator of the csv file.")
     parser.add_argument("-c", "--config", action="store", dest="config", default="config.txt"
                         , help="path to the required configuration file.")
-    parser.add_argument("-t", "--title", action="store", dest="title", default=""
+    parser.add_argument("-n", "--title", action="store", dest="title", default=""
                         , help="the title of the plot.")
     parser.add_argument("-r", "--referenceID", action="store", dest="referenceID", default=""
                         , help="the ID used to create the reference curve for violin plots.")
     parser.add_argument("-p", "--plottype", action="store", dest="plottype", default="merged"
                         , help="the type of plot required (merged/TODO/TODO)")
-    parser.add_argument("-a", "--additional", action="store_true", dest="additional", default=False
-                        , help="create additional plots for the time and memory consumption.")
+    parser.add_argument("-t", "--time", action="store_true", dest="time", default=False
+                        , help="create additional plots for the runtime.")
+    parser.add_argument("-m", "--memory", action="store_true", dest="memory", default=False
+                        , help="create additional plots for the memory consumption.")
     args = parser.parse_args()
 
     # Read the config file
@@ -379,8 +456,11 @@ def main(argv):
     if args.plottype == "merged":
         plot_merged(args, config)
 
-    if args.additional:
-        plot_time_and_memory(args, config)
+    if args.time:
+        plot_time(args, config)
+
+    if args.memory:
+        plot_memory(args, config)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
