@@ -1,19 +1,19 @@
 #!/bin/bash
 #$ -N intaRNA-benchmark
 #$ -cwd
-#$ -pe smp 8
+#$ -pe smp 24
+#$ -R y
 #$ -l h_vmem=1G
-#$ -o <path to the working folder>
-#$ -e <path to the working folder>
+#$ -o /scratch/bi03/gelhausr/intaRNA/IntaRNA-benchmark/sge-out/
 #$ -j y
-#$ -M <email address if desired>
+#$ -M gelhausr@informatik.uni-freiburg.de
 #$ -m a
 
 # This script will require a conda environment with:
 # - the necessary dependencies of intaRNA
 # - python3 | pandas
-export PATH="<path to miniconda>/miniconda3/bin/:$PATH"
-cd <path to the working folder>
+export PATH="/scratch/bi03/gelhausr/miniconda3/bin/:$PATH"
+cd /scratch/bi03/gelhausr/intaRNA/IntaRNA-benchmark
 source activate intarna-benchmark
 
 # Variables
@@ -58,7 +58,7 @@ fi
 # Run benchmark
 if [ "$withED" == true ]
 then
-  python3 $scriptsPath/calls.py -b $intaRNAbinary -i $inputPath -o $outputPath -c $callID $intaRNACall -e
+  python3 $scriptsPath/calls.py -b "$intaRNAbinary" -i "$inputPath" -o "$outputPath" -c "$callID" "$intaRNACall" -e
 else
-  python3 $scriptsPath/calls.py -b $intaRNAbinary -i $inputPath -o $outputPath -c $callID $intaRNACall
+  python3 $scriptsPath/calls.py -b "$intaRNAbinary" -i "$inputPath" -o "$outputPath" -c "$callID" "$intaRNACall"
 fi

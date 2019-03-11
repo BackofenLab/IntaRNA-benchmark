@@ -59,9 +59,6 @@ def main(argv):
     # Remaining argument options are used for IntaRNA
     cmdLineArgs = " ".join(cmdLineArgs)
 
-    # number of used threads (set for IntaRNA call)
-    threads = 1
-
     # Check whether a callID was given
     if args.callID == "":
         sys.exit("No callID was specified! Please specify a callID using -c <name> or --callID=<name>")
@@ -165,14 +162,7 @@ def main(argv):
 
                 if (args.enabledTargetED):
                     call += " --tAcc=E --tAccFile=" \
-                            + os.path.join(".", "ED-values", organism, target_name, "intarna.target.ed") \
-                            + " --tIntLenMax 150"
-
-                # get the number of used threads
-                if "threads " in cmdLineArgs:
-                    threads = int(cmdLineArgs.split("threads ")[-1].split(" ")[0])
-                elif "threads=" in cmdLineArgs:
-                    threads = int(cmdLineArgs.split("threads=")[-1].split(" ")[0])
+                            + os.path.join(".", "ED-values", organism, target_name, "intarna.target.ed")
 
                 print(call, file=open(callLogFilePath, "a"))
                 if not args.noJobStart:
@@ -181,8 +171,8 @@ def main(argv):
                     # do call and get process information
                     timeCall, maxMemory = runSubprocess(callArgs)
                     # store process information
-                    # Time in seconds (divide by number of threads to get real time)
-                    timeLine += ";%.2f" % (timeCall / threads)
+                    # Time in seconds
+                    timeLine += ";%.2f" % (timeCall)
                     # Convert to megabyte (MB)
                     memoryLine += ";%.2f" % (float(maxMemory) / 1000)
                 else:
