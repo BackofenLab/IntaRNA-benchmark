@@ -297,7 +297,7 @@ def plot_time(args, config):
 
     set_axis_style(ax2, keys, config)
 
-    plt.suptitle(config["additionalplots"]["title"], fontsize=int(config["additionalplots"]["fontsize"]))
+    plt.suptitle(config["time"]["title"], fontsize=int(config["additionalplots"]["fontsize"]))
 
     for tick in ax1.get_xticklabels():
         tick.set_rotation(float(config["axisstyle"]["xticksRotation"]))
@@ -415,7 +415,7 @@ def plot_memory(args, config):
 
     set_axis_style(ax2, keys, config)
 
-    plt.suptitle(config["additionalplots"]["title"], fontsize=int(config["additionalplots"]["fontsize"]))
+    plt.suptitle(config["memory"]["title"], fontsize=int(config["additionalplots"]["fontsize"]))
 
     for tick in ax1.get_xticklabels():
         tick.set_rotation(float(config["axisstyle"]["xticksRotation"]))
