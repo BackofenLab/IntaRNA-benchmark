@@ -251,7 +251,7 @@ def plot_time(args, config):
     set_axis_limits(ax1, config)
 
     # =========================================================================
-    timeDict.pop(args.referenceID, None)
+    refData = timeDict.pop(args.referenceID)
     timeData = []
     keys = list(timeDict.keys())
     human_sort(keys)
@@ -369,7 +369,7 @@ def plot_memory(args, config):
     set_axis_limits(ax1, config)
 
     # =========================================================================
-    memoryDict.pop(args.referenceID, None)
+    refData = memoryDict.pop(args.referenceID)
     memoryData = []
     keys = list(memoryDict.keys())
     human_sort(keys)
