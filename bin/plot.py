@@ -257,9 +257,7 @@ def plot_time(args, config):
     human_sort(keys)
 
     for key in keys:
-        timeIncrease = list(map(operator.sub, timeDict[key], refData))
-        timeIncreasePercentage= [x/y for x,y in zip(timeIncrease,timeDict[key])] #(timeIncrease / timeDict) *100
-        timeData.append([x*100 for x in timeIncreasePercentage])
+        timeData.append(list(map(operator.sub, timeDict[key], refData)))
 
     violin_parts = ax2.violinplot(timeData, showextrema=True, showmeans=True, showmedians=True)
     for idx, pc in enumerate(violin_parts['bodies']):

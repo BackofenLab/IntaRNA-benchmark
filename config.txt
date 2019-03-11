@@ -68,7 +68,7 @@ title=Runtime
 fontsize=16
 xlabel=instances
 ylabelleft=time (in minutes)
-ylabelright=time difference (in %%)
+ylabelright=time difference
 ylabelpos=right
 ytickspos=right
 
@@ -77,7 +77,7 @@ title=Memory consumption
 fontsize=16
 xlabel=instances
 ylabelleft=memory (in megabytes)
-ylabelright=memory difference (in %%)
+ylabelright=memory difference
 ylabelpos=right
 ytickspos=right
 
