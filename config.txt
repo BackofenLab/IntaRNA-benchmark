@@ -64,14 +64,20 @@ fontsize=20
 tight_layout=0 0.03 1 0.95
 
 [time]
+title=Runtime
 fontsize=16
-ylabel=time increase (in %%)
-ylabelpos=left
-ytickspos=left
+xlabel=instances
+ylabelleft=time (in minutes)
+ylabelright=time difference (in %%)
+ylabelpos=right
+ytickspos=right
 
 [memory]
+title=Memory consumption
 fontsize=16
-ylabel=memory (in megabytes)
+xlabel=instances
+ylabelleft=memory (in megabytes)
+ylabelright=memory difference (in %%)
 ylabelpos=right
 ytickspos=right
 
