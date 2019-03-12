@@ -162,7 +162,7 @@ def main(argv):
 
                 if (args.enabledTargetED):
                     call += " --tAcc=E --tAccFile=" \
-                         + os.path.join(".", "ED-values", organism, target_name, "intarna.target.ed")
+                         + os.path.join(args.outputPath, "ED-values", organism, target_name, "intarna.target.ed")
 
                 print(call, file=open(callLogFilePath, "a"))
                 if not args.noJobStart:
@@ -174,7 +174,7 @@ def main(argv):
                     # Time in seconds
                     timeLine += ";%.2f" % (timeCall)
                     # Convert to megabyte (MB)
-                    memoryLine += ";%.2f" % (float(maxMemory) / 1000)
+                    memoryLine += ";%.2f" % (maxMemory)
                 else:
                     # store that process information not available (NA)
                     timeLine += ";NA"
