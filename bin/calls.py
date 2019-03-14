@@ -53,6 +53,8 @@ def main(argv):
                         , help="Target ED-values will be stored in a data folder and reused for all further computations.")
     parser.add_argument("-v", "--verified", action="store", dest="verified_interactions", default="./verified_interactions.csv"
                         , help="The path to the file containing the verified interactions.")
+    parser.add_argument("-m", "--maxInteractionLength", action="store", dest="maxInteractionLength", default="150"
+                        , help="The maximum interaction length used in the precomputation of the target ED values.")
 
     #   Warning  Prefix matching rules apply to parse_known_args().
     #  The parser may consume an option even if it’s just a prefix of one of its known options, instead of leaving it in the remaining arguments list.
@@ -63,6 +65,15 @@ def main(argv):
 
     # Remaining argument options are used for IntaRNA
     cmdLineArgs = " ".join(cmdLineArgs)
+
+    # list of invalid command line arguments for intaRNA
+    illegalArgs = ["--qAccW", "--qAccL", "--qAcc", "--tAccW", "--tAccL", "--tAcc", "--qIntLenMax", "--tIntLenMax"]
+
+    # check for illegal arguments
+    for argument in illegalArgs:
+        if argument in cmdLineArgs:
+            sys.exit("The following intaRNA command line parameter is currently not supported in the benchmark: " + argument)
+
 
     # Check whether a callID was given
     if args.callID == "":
@@ -167,7 +178,8 @@ def main(argv):
 
                 if (args.enabledTargetED):
                     call += " --tAcc=E --tAccFile=" \
-                         + os.path.join(args.outputPath, "ED-values", organism, target_name, "intarna.target.ed")
+                         + os.path.join(args.outputPath, "ED-values", organism, target_name, "intarna.target.ed") \
+                         + " --tIntLenMax " + args.maxInteractionLength
 
                 print(call, file=open(callLogFilePath, "a"))
                 if not args.noJobStart:

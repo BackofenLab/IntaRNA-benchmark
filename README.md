@@ -53,7 +53,7 @@ __Parameters:__
 * __withED (`-e`)__ allows the precomputation of target ED-values in order to avoid recomputation.
 * __callsOnly (`-n`)__ generates the calls and saves them in a log file without starting the process.
 * __verified (`-v`)__ the path and file containing the verified interactions.
-
+* __maxInteractionLength (`-m`)__ The maximum interaction length used in the precomputation of the target ED values. Default: `150`
 
 __IMPORTANT:__ Arguments for IntaRNA can be added at the end of the script call and will be redirected to IntaRNA. python3 calls.py -c "callID"   --"IntaRNA cmdLineArguments"
 
