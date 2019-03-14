@@ -7,7 +7,8 @@ import glob
 import shlex
 from subprocess import Popen
 from subprocess import PIPE
-
+from subprocess import check_output
+from subprocess import STDOUT
 
 ########################################################################################################################
 #                                                                                                                      #
@@ -20,12 +21,16 @@ from subprocess import PIPE
 
 # Run a subprocess with the given call and provide process statistics
 def runSubprocess(callArgs):
-    with Popen(callArgs) as process:
-        # wait for call to finish and get statistics
-        ru = os.wait4(process.pid, 0)[2]
+    # wait for call to finish and get statistics
+    output = check_output(callArgs,stderr=STDOUT).decode("utf-8")
+    std_out = list(filter(None, output.replace("\t","").split("\n")))
+    # create a dictionary containing output of /usr/bin/time -v
+    stat_dict = dict()
+    for line in std_out:
+        splt = line.split(": ")
+        stat_dict[splt[0]] = splt[1]
     # Return time and memory usage
-    return ru.ru_utime, ru.ru_maxrss
-
+    return stat_dict["User time (seconds)"], stat_dict["Maximum resident set size (kbytes)"]
 
 def main(argv):
     fastaFileEndings = [".fasta", ".fa"]
@@ -166,15 +171,17 @@ def main(argv):
 
                 print(call, file=open(callLogFilePath, "a"))
                 if not args.noJobStart:
+                    # add stats to call
+                    call = "/usr/bin/time -v " + call
                     # split call for subprocess creation
                     callArgs = shlex.split(call, posix=False)
                     # do call and get process information
                     timeCall, maxMemory = runSubprocess(callArgs)
                     # store process information
                     # Time in seconds
-                    timeLine += ";%.2f" % (timeCall)
+                    timeLine += ";" + timeCall
                     # Convert to megabyte (MB)
-                    memoryLine += ";%.2f" % (maxMemory)
+                    memoryLine += ";" + maxMemory
                 else:
                     # store that process information not available (NA)
                     timeLine += ";NA"
