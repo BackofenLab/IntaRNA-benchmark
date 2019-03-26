@@ -22,7 +22,11 @@ from subprocess import STDOUT
 # Run a subprocess with the given call and provide process statistics
 def runSubprocess(callArgs):
     # wait for call to finish and get statistics
-    output = check_output(callArgs,stderr=STDOUT).decode("utf-8")
+    output = ""
+    try:
+        output = check_output(callArgs,stderr=STDOUT).decode("utf-8")
+    except subprocess.CalledProcessError as e:
+        print "calling "+e.cmd+" produced error code "+e.returncode+" and output "+e.output
     std_out = list(filter(None, output.replace("\t","").split("\n")))
     # create a dictionary containing output of /usr/bin/time -v
     stat_dict = dict()
@@ -66,13 +70,17 @@ def main(argv):
     # Remaining argument options are used for IntaRNA
     cmdLineArgs = " ".join(cmdLineArgs)
 
-    # list of invalid command line arguments for intaRNA
-    illegalArgs = ["--qAccW", "--qAccL", "--qAcc", "--tAccW", "--tAccL", "--tAcc", "--qIntLenMax", "--tIntLenMax"]
+    tAccW = 150
+    tAccL = 100
+    tIntLenMax = tAccW
 
-    # check for illegal arguments
-    for argument in illegalArgs:
-        if argument in cmdLineArgs:
-            sys.exit("The following intaRNA command line parameter is currently not supported in the benchmark: " + argument)
+    # # list of invalid command line arguments for intaRNA
+    # illegalArgs = ["--qAccW", "--qAccL", "--qAcc", "--tAccW", "--tAccL", "--tAcc", "--qIntLenMax", "--tIntLenMax"]
+
+    # # check for illegal arguments
+    # for argument in illegalArgs:
+    #     if argument in cmdLineArgs:
+    #         sys.exit("The following intaRNA command line parameter is currently not supported in the benchmark: " + argument)
 
 
     # Check whether a callID was given
@@ -179,7 +187,6 @@ def main(argv):
                 if (args.enabledTargetED):
                     call += " --tAcc=E --tAccFile=" \
                          + os.path.join(args.outputPath, "ED-values", organism, target_name, "intarna.target.ed") \
-                         + " --tIntLenMax " + args.maxInteractionLength
 
                 print(call, file=open(callLogFilePath, "a"))
                 if not args.noJobStart:
