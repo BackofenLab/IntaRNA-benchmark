@@ -70,9 +70,9 @@ def main(argv):
     # Remaining argument options are used for IntaRNA
     cmdLineArgs = " ".join(cmdLineArgs)
 
-    tAccW = 150
-    tAccL = 100
-    tIntLenMax = tAccW
+    # tAccW = 150
+    # tAccL = 100
+    # tIntLenMax = tAccW
 
     # # list of invalid command line arguments for intaRNA
     # illegalArgs = ["--qAccW", "--qAccL", "--qAcc", "--tAccW", "--tAccL", "--tAcc", "--qIntLenMax", "--tIntLenMax"]
