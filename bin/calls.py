@@ -27,7 +27,7 @@ def runSubprocess(callArgs):
     try:
         output = check_output(callArgs,stderr=STDOUT).decode("utf-8")
     except CalledProcessError as e:
-        print("calling "+e.cmd+" produced error code "+e.returncode+" and output "+e.output)
+        print("calling "+(" ".join(e.cmd))+" produced error code "+e.returncode+" and output "+e.output)
     std_out = list(filter(None, output.replace("\t","").split("\n")))
     # create a dictionary containing output of /usr/bin/time -v
     stat_dict = dict()
