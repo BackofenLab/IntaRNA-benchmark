@@ -220,7 +220,7 @@ def plot_time(args, config):
     # Read the values into the time dictionary
     for row in timeDF.iterrows():
         index, data = row
-        timeDict[timeDF.iloc[index]["callID"]] = [x / 60 for x in data.tolist()[3:]]
+        timeDict[timeDF.iloc[index]["callID"]] += [x / 60 for x in data.tolist()[3:]]
 
     # Handle the reference ID
     refData = timeDict[args.referenceID]
@@ -231,17 +231,21 @@ def plot_time(args, config):
 
     # sort times by reference data
     sorted_index = [i for (v, i) in sorted((v, i) for (i, v) in enumerate(refData))]
+
     for key in keys:
         timeDict[key] = [timeDict[key][i] for i in sorted_index]
+
+    # the labels for the x-axis
+    xlabels = range(1,len(timeDict[args.referenceID])+1)
 
     # Check keys and plot the referenceID in red.
     # The other keys are colored according to the given color list.
     for key in keys:
         if key == args.referenceID:
-            ax1.plot(timeDict[key], label=args.referenceID, color="red", zorder=30)
+            ax1.plot(xlabels, timeDict[key], label=args.referenceID, color="red", zorder=30)
             continue
 
-        ax1.plot(timeDict[key], label=key, color=next(colorcycler))
+        ax1.plot(xlabels, timeDict[key], label=key, color=next(colorcycler))
 
     # Create the legend
     ax1.legend(loc="upper left", fontsize=int(config["legend"]["fontsize"]))
@@ -249,15 +253,18 @@ def plot_time(args, config):
     ax1.axes.set_xlabel(config["time"]["xlabel"], fontsize=int(config["body"]["fontsize"]))
 
     set_axis_limits(ax1, config)
+    ax1.set_xticks(np.arange(min(xlabels)-1, max(xlabels)+1, 2.0))
 
     # =========================================================================
-    refData = timeDict.pop(args.referenceID)
+    timeDict.pop(args.referenceID, None)
     timeData = []
     keys = list(timeDict.keys())
     human_sort(keys)
 
     for key in keys:
-        timeData.append(list(map(operator.sub, timeDict[key], refData)))
+        timeIncrease = list(map(operator.sub, timeDict[key], refData))
+        timeIncreasePercentage= [x/y for x,y in zip(timeIncrease,timeDict[key])] #(timeIncrease / timeDict) *100
+        timeData.append([x*100 for x in timeIncreasePercentage])
 
     violin_parts = ax2.violinplot(timeData, showextrema=True, showmeans=True, showmedians=True)
     for idx, pc in enumerate(violin_parts['bodies']):
@@ -350,14 +357,17 @@ def plot_memory(args, config):
     for key in keys:
         memoryDict[key] = [memoryDict[key][i] for i in sorted_index]
 
+    # the labels for the x-axis
+    xlabels = range(1,len(memoryDict[args.referenceID])+1)
+
     # Check keys and plot the referenceID in red.
     # The other keys are colored according to the given color list.
     for key in keys:
         if key == args.referenceID:
-            ax1.plot(memoryDict[key], label=args.referenceID, color="red", zorder=30)
+            ax1.plot(xlabels, memoryDict[key], label=args.referenceID, color="red", zorder=30)
             continue
 
-        ax1.plot(memoryDict[key], label=key, color=next(colorcycler))
+        ax1.plot(xlabels, memoryDict[key], label=key, color=next(colorcycler))
 
     # Create the legend
     ax1.legend(loc="upper left", fontsize=int(config["legend"]["fontsize"]))
@@ -365,9 +375,10 @@ def plot_memory(args, config):
     ax1.axes.set_xlabel(config["memory"]["xlabel"], fontsize=int(config["body"]["fontsize"]))
 
     set_axis_limits(ax1, config)
+    ax1.set_xticks(np.arange(min(xlabels)-1, max(xlabels)+1, 2.0))
 
     # =========================================================================
-    refData = memoryDict.pop(args.referenceID)
+    memoryDict.pop(args.referenceID, None)
     memoryData = []
     keys = list(memoryDict.keys())
     human_sort(keys)
