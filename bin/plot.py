@@ -253,7 +253,7 @@ def plot_time(args, config):
     ax1.axes.set_xlabel(config["time"]["xlabel"], fontsize=int(config["body"]["fontsize"]))
 
     set_axis_limits(ax1, config)
-    ax1.set_xticks(np.arange(min(xlabels)-1, max(xlabels)+1, 2.0))
+    ax1.set_xticks(np.arange(min(xlabels), max(xlabels)+2, 2.0))
 
     # =========================================================================
     timeDict.pop(args.referenceID, None)
@@ -375,7 +375,7 @@ def plot_memory(args, config):
     ax1.axes.set_xlabel(config["memory"]["xlabel"], fontsize=int(config["body"]["fontsize"]))
 
     set_axis_limits(ax1, config)
-    ax1.set_xticks(np.arange(min(xlabels)-1, max(xlabels)+1, 2.0))
+    ax1.set_xticks(np.arange(min(xlabels), max(xlabels)+2, 2.0))
 
     # =========================================================================
     memoryDict.pop(args.referenceID, None)
