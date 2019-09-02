@@ -17,7 +17,9 @@ This folder is initially empty and is filled using the benchmark scripts.
 
 The `bin` folder holds various different scripts used in the benchmarking process.
 
-A required file is the `verified_interactions.csv`. The file contains interactions that were verified experimentally.
+A required file is the `verified_interactions.csv`. The file contains interactions that were verified experimentally. The current data set covers interactions for
+- Echericha coli (GenBank accession number NC_000913)
+- Salmonella typhimurium (NC_003197)
 
 ### Theoretical background
 The idea is to compare the output of different IntaRNA calls with the experimentally verified interactions.
