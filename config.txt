@@ -66,7 +66,7 @@ tight_layout=0 0.03 1 0.95
 [time]
 title=Runtime
 fontsize=16
-xlabel=instances
+xlabel=sRNA (ordered by length)
 ylabelleft=time (in minutes)
 ylabelright=time difference
 ylabelpos=right
