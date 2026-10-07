@@ -67,8 +67,8 @@ tight_layout=0 0.03 1 0.95
 title=Runtime
 fontsize=16
 xlabel=instances
-ylabelleft=time (in minutes)
-ylabelright=time difference
+ylabelleft=user CPU time (in minutes)
+ylabelright=CPU time change vs reference (%)
 ylabelpos=right
 ytickspos=right
 
@@ -76,8 +76,8 @@ ytickspos=right
 title=Memory consumption
 fontsize=16
 xlabel=instances
-ylabelleft=memory (in megabytes)
-ylabelright=memory difference
+ylabelleft=peak RSS (in MiB)
+ylabelright=peak RSS difference (MiB)
 ylabelpos=right
 ytickspos=right
 
