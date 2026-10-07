@@ -1,107 +1,92 @@
 #!/usr/bin/env python3
-# Author: Rick Gelhausen
-import sys, argparse
-import os.path
-import glob
+# Original author: Rick Gelhausen
+"""Merge matching benchmark runs and their runtime/memory tables."""
+import argparse
+import json
+from pathlib import Path
+import sys
+
 import pandas as pd
 
-########################################################################################################################
-#                                                                                                                      #
-#                              Merge benchmark csv files ending in _benchmark.csv                                      #
-#                               Also merges the according memory and time files                                        #
-#                                        Merge all or specific callIDs                                                 #
-#                                                                                                                      #
-########################################################################################################################
+KEYS = ["srna_name", "target_ltag", "target_name"]
 
-# This method assumes an equal setup of all benchmark files
+
+def completed_run(directory):
+    manifest = directory / "run.json"
+    return not manifest.exists() or json.loads(manifest.read_text(encoding="utf-8"))["status"] == "complete"
+
+
+def merged_benchmarks(paths):
+    result = pd.read_csv(paths[0], sep=";", dtype={key: str for key in KEYS})
+    if result.empty or result.duplicated(KEYS).any():
+        raise ValueError("Benchmark must have nonempty, unique interaction keys: " + str(paths[0]))
+    for path in paths[1:]:
+        other = pd.read_csv(path, sep=";", dtype={key: str for key in KEYS})
+        if (set(result.columns) & set(other.columns)) - set(KEYS):
+            raise ValueError("Duplicate run columns in " + str(path))
+        result = result.merge(other, on=KEYS, how="outer", validate="one_to_one", indicator=True)
+        if not result["_merge"].eq("both").all():
+            raise ValueError("Benchmarks cover different verified interactions; refusing to drop rows")
+        result = result.drop(columns="_merge")
+    return result.reindex(columns=KEYS + sorted(set(result.columns) - set(KEYS)))
+
+
 def mergeBenchmarks(benchList, outputPath):
-    resultBenchDF = pd.read_csv(benchList[0], sep=";", header=0)
-    for bench in benchList[1:]:
-        nextbench = pd.read_csv(bench, sep=";", header=0)
-        resultBenchDF = pd.merge(resultBenchDF, nextbench)
-
-    # Order the columns
-    preorder = ["srna_name", "target_ltag", "target_name"]
-    tags = [x for x in resultBenchDF.columns if x not in preorder]
-    neworder = preorder + sorted(tags)
-    resultBenchDF.reindex(columns=neworder)
-
-    # Write to csv
-    resultBenchDF.to_csv(outputPath, sep=";", index=False)
+    merged_benchmarks(benchList).to_csv(outputPath, sep=";", index=False)
 
 
-# Merge method for memory and time files
+def merged_logs(ids, directory, filename):
+    frames = []
+    for call_id in ids:
+        frame = pd.read_csv(directory / call_id / filename, sep=";", dtype={"callID": str, "target_name": str, "Organism": str})
+        if frame.empty or not frame["callID"].eq(call_id).all():
+            raise ValueError("Incorrect callID or empty log: " + str(directory / call_id / filename))
+        if frame.duplicated(["target_name", "Organism"]).any():
+            raise ValueError("Duplicate target/organism measurements in " + call_id)
+        frames.append(frame)
+    return pd.concat(frames, ignore_index=True).sort_values(["callID", "Organism", "target_name"])
+
+
 def mergeLogFiles(callIDList, benchPath, outputpath):
-    timeDF = pd.read_csv(os.path.join(benchPath, callIDList[0], "runTime.csv"), sep=";", header=0)
-    memoryDF = pd.read_csv(os.path.join(benchPath, callIDList[0], "memoryUsage.csv"), sep=";", header=0)
-    for callID in callIDList[1:]:
-        nextTimeDF = pd.read_csv(os.path.join(benchPath, callID, "runTime.csv"), sep=";", header=0)
-        nextMemoryDF = pd.read_csv(os.path.join(benchPath, callID, "memoryUsage.csv"), sep=";", header=0)
-
-        # Concatenate next dataframes
-        timeDF = pd.concat([timeDF, nextTimeDF]).drop_duplicates().reset_index(drop=True)
-        memoryDF = pd.concat([memoryDF, nextMemoryDF]).drop_duplicates().reset_index(drop=True)
-
-    # Sort dataframes according to their callID
-    timeDF = timeDF.sort_values("callID")
-    memoryDF = memoryDF.sort_values("callID")
-
-    # Write to csv
-    timeDF.to_csv(outputpath[:-len(".csv")] + "_runTimes.csv", sep=";", index=False)
-    memoryDF.to_csv(outputpath[:-len(".csv")] + "_MaxMemoryUsage.csv", sep=";", index=False)
+    base = Path(outputpath).with_suffix("")
+    for filename, suffix in (("runTime.csv", "_runTimes.csv"), ("memoryUsage.csv", "_MaxMemoryUsage.csv")):
+        merged_logs(callIDList, Path(benchPath), filename).to_csv(str(base) + suffix, sep=";", index=False)
 
 
-def main(argv):
-    parser = argparse.ArgumentParser(description="Script to merge multiple benchmarks")
-    parser.add_argument("-i", "--ifile", action="store", dest="infileName", default=os.path.join("benchmark.csv")
-                        , help="The default name of the result file of the benchmarking script")
-    parser.add_argument("-o", "--ofile", action="store", dest="outputfile", default=os.path.join("")
-                        , help="Mandatory path and name for the outputfile.")
-    parser.add_argument("-d", "--bdirs", action="store", dest="benchFilePath", default=os.path.join(".", "output")
-                        , help=" path to the benchmark folders.")
-    parser.add_argument("-c", "--callID", nargs="*", dest="callIDs", default=""
-                        , help="a mandatory ID to differentiate between multiple calls of the script. Specify multiple ones by using callID1 callID2 ...")
-    parser.add_argument("-a", "--all", action="store_true", dest="all", default=False
-                        , help="When set all available benchmark folders will be merged.")
-    args = parser.parse_args()
-
-    # Enforce an outputfile path/name.csv
-    if args.outputfile == "":
-        sys.exit("Please use: python3 mergeBenchmarks.py -o <path/name.csv> to specify an output file!")
-
-    # read all benchfiles in folder
-    allIDfolders = [x for x in glob.glob(os.path.join(args.benchFilePath, "*")) if os.path.isdir(x)]
-
-    if not args.all:
-        # Check whether callIDs were given
-        if len(args.callIDs) < 2:
-            sys.exit("Please specify atleast two callIDs using python3 mergeBenchmarks -c <name1 name2>")
-
-        toBeMerged = []
-        existingCallIDs = []
-        for bID in args.callIDs:
-            for folder in allIDfolders:
-                if bID == folder.split(os.path.sep)[-1]:
-                    toBeMerged.append(os.path.join(folder, args.infileName))
-                    existingCallIDs.append(bID)
-
-        if len(toBeMerged) > 1:
-            mergeBenchmarks(toBeMerged, args.outputfile)
-            mergeLogFiles(existingCallIDs, args.benchFilePath, args.outputfile)
-        else:
-            sys.exit("Not enough files to merge!")
-
-    # Merge all
-    else:
-        if len(allIDfolders) > 1:
-            allIDfolders = [os.path.join(x, args.infileName) for x in allIDfolders]
-
-            mergeBenchmarks(allIDfolders, args.outputfile)
-            allIDs = [x.split(os.path.sep)[-2] for x in allIDfolders]
-            mergeLogFiles(allIDs, args.benchFilePath, args.outputfile)
-        else:
-            sys.exit("Not enough files to merge!")
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("-i", "--ifile", default="benchmark.csv")
+    parser.add_argument("-o", "--ofile", type=Path, required=True)
+    parser.add_argument("-d", "--bdirs", type=Path, default=Path("output"))
+    selection = parser.add_mutually_exclusive_group(required=True)
+    selection.add_argument("-c", "--callID", nargs="+")
+    selection.add_argument("-a", "--all", action="store_true")
+    args = parser.parse_args(argv)
+    try:
+        ids = args.callID if not args.all else sorted(path.name for path in args.bdirs.iterdir()
+                                                     if path.is_dir() and (path / args.ifile).is_file() and completed_run(path))
+        if len(ids) < 2 or len(ids) != len(set(ids)):
+            raise ValueError("Select at least two different completed callIDs")
+        for call_id in ids:
+            if not completed_run(args.bdirs / call_id):
+                raise ValueError("Run is not complete: " + call_id)
+        # Read and validate everything before writing any merged output.
+        benchmark = merged_benchmarks([args.bdirs / call_id / args.ifile for call_id in ids])
+        runtime = merged_logs(ids, args.bdirs, "runTime.csv")
+        memory = merged_logs(ids, args.bdirs, "memoryUsage.csv")
+        base = str(args.ofile.with_suffix(""))
+        outputs = [(args.ofile, benchmark), (Path(base + "_runTimes.csv"), runtime),
+                   (Path(base + "_MaxMemoryUsage.csv"), memory)]
+        for path, _ in outputs:
+            if path.exists():
+                raise ValueError("Merged output already exists: " + str(path))
+        args.ofile.parent.mkdir(parents=True, exist_ok=True)
+        for path, frame in outputs:
+            frame.to_csv(path, sep=";", index=False)
+    except (OSError, ValueError, KeyError, pd.errors.ParserError, pd.errors.MergeError) as error:
+        parser.error(str(error))
+    return 0
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    sys.exit(main())

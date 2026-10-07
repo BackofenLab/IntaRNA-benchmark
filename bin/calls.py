@@ -1,231 +1,211 @@
 #!/usr/bin/env python3
-# NOTE: python > 3.2 needed
-# Author: Rick Gelhausen
-import sys, argparse
+# Original author: Rick Gelhausen
+"""Run the existing IntaRNA benchmark pipeline on one local computer."""
+import argparse
+import csv
+import hashlib
+import importlib.util
+import json
 import os
-import glob
+from pathlib import Path
+import re
 import shlex
-from subprocess import Popen
-from subprocess import PIPE
-from subprocess import check_output
-from subprocess import STDOUT
-from subprocess import CalledProcessError
+import shutil
+import subprocess
+import sys
+import tempfile
 
-########################################################################################################################
-#                                                                                                                      #
-#            This script calls intaRNA with custom parameters on a set of sRNA queries and mRNA targets.               #
-#            The script requires a callID to identify the call and to allow parallel runs of the script.               #
-#                   The benchmark.py script is called after building the result files.                                 #
-#                                                                                                                      #
-########################################################################################################################
+ROOT = Path(__file__).resolve().parent.parent
+FASTA_SUFFIXES = {".fa", ".fasta"}
 
 
-# Run a subprocess with the given call and provide process statistics
+def executable(value):
+    # Do not resolve symlinks: IntaRNA personalities depend on argv[0].
+    found = shutil.which(value)
+    if found is None:
+        raise ValueError("IntaRNA executable not found or not executable: " + value)
+    return os.path.abspath(found)
+
+
 def runSubprocess(callArgs):
-    # wait for call to finish and get statistics
-    output = ""
-    try:
-        output = check_output(callArgs,stderr=STDOUT).decode("utf-8")
-    except CalledProcessError as e:
-        print("calling "+(" ".join(e.cmd))+" produced error code "+str(e.returncode)+" and output "+str(e.output))
-    std_out = list(filter(None, output.replace("\t","").split("\n")))
-    # create a dictionary containing output of /usr/bin/time -v
-    stat_dict = dict()
-    for line in std_out:
-        splt = line.split(": ")
-        stat_dict[splt[0]] = splt[1]
-    # Return time and memory usage
-    return stat_dict["User time (seconds)"], stat_dict["Maximum resident set size (kbytes)"]
+    """Return user CPU seconds and peak RSS in KiB; propagate tool failures."""
+    with tempfile.NamedTemporaryFile(mode="r+", encoding="utf-8") as stats:
+        subprocess.run(
+            ["/usr/bin/time", "-f", "%U;%M", "-o", stats.name, "--", *callArgs],
+            check=True, env={**os.environ, "LC_ALL": "C"},
+        )
+        stats.seek(0)
+        cpu, memory = stats.read().strip().split(";")
+        return float(cpu), int(memory)
 
-def main(argv):
-    fastaFileEndings = [".fasta", ".fa"]
 
+def collect_inputs(input_path):
+    """Validate every input before starting expensive predictions."""
+    jobs = []
+    outputs = set()
+    for organism in sorted(p for p in input_path.iterdir() if p.is_dir()):
+        groups = []
+        for kind in ("query", "target"):
+            folder = organism / kind
+            if not folder.is_dir():
+                raise ValueError("Missing input directory: " + str(folder))
+            files = sorted(p for p in folder.iterdir() if p.is_file() and p.suffix.lower() in FASTA_SUFFIXES)
+            if not files:
+                raise ValueError("No FASTA files in " + str(folder))
+            for path in files:
+                with path.open(encoding="utf-8") as handle:
+                    count = sum(line.startswith(">") for line in handle)
+                if count == 0 or (kind == "query" and count != 1):
+                    raise ValueError("Each query FASTA must contain one sequence and each target FASTA at least one: " + str(path))
+            groups.append(files)
+        for target in groups[1]:
+            for query in groups[0]:
+                srna = query.stem.split("_")[0]
+                output = srna + "_" + target.stem + ".csv"
+                if output in outputs:
+                    raise ValueError("Inputs would overwrite the same prediction file: " + output)
+                outputs.add(output)
+                jobs.append(dict(organism=organism.name, srna=srna, query=str(query),
+                                 target=str(target), target_name=target.stem, output=output))
+    if not jobs:
+        raise ValueError("No benchmark datasets in " + str(input_path))
+    return jobs
+
+
+def option_names(arguments):
+    return {arg.split("=", 1)[0] for arg in arguments if arg.startswith("-")}
+
+
+def validate_arguments(arguments, with_ed):
+    # The pipeline owns input/output routing. Changing these can silently rank
+    # the wrong data, suppress CSV output, or include suboptimal hits as targets.
+    reserved = {"-q", "--query", "-t", "--target", "--out", "--outMode",
+                "--outCsvCols", "-n", "--outNumber", "--outPairwise",
+                "--qSet", "--tSet", "--qId", "--tId", "--parameterFile",
+                "-h", "--help", "--fullhelp", "--version"}
+    if with_ed:
+        reserved |= {"--tAcc", "--tAccFile", "--acc"}
+    for arg in arguments:
+        name = arg.split("=", 1)[0]
+        if name in reserved or (arg.startswith(("-q", "-t", "-n")) and not arg.startswith("--")):
+            raise ValueError("The benchmark manages this IntaRNA option: " + name)
+
+
+def main(argv=None):
     parser = argparse.ArgumentParser(
-        description="Call script for benchmarking IntaRNA. IntaRNA commandLineArguments can be added at the end of the call."
-                    "python3 calls.py -c <callID>  --<IntaRNA arguments>")
-    parser.add_argument("-b", "--intaRNAbinary", action="store", dest="intaRNAbinary",
-                        default=os.path.join("..", "IntaRNA", "src", "bin", "IntaRNA")
-                        , help="the location of the intaRNA executable. Default: ../IntaRNA/src/bin .")
-    parser.add_argument("-i", "--infile", action="store", dest="inputPath", default=os.path.join(".", "input")
-                        , help="input folder containing the required fasta files. Default: ./input")
-    parser.add_argument("-o", "--outfile", action="store", dest="outputPath", default=os.path.join(".", "output")
-                        , help="location of the output folder.")
-    parser.add_argument("-c", "--callID", action="store", dest="callID", default=""
-                        , help="a mandatory ID to differentiate between multiple calls of the script.")
-    parser.add_argument("-n", "--callsOnly", action="store_true", dest="noJobStart", default=False
-                        , help="only generate the calls and store in the logfile but not start processes.")
-    parser.add_argument("-e", "--withTargetED", action="store_true", dest="enabledTargetED", default=False
-                        , help="Target ED-values will be stored in a data folder and reused for all further computations.")
-    parser.add_argument("-v", "--verified", action="store", dest="verified_interactions", default="./verified_interactions.csv"
-                        , help="The path to the file containing the verified interactions.")
-    parser.add_argument("-m", "--maxInteractionLength", action="store", dest="maxInteractionLength", default="150"
-                        , help="The maximum interaction length used in the precomputation of the target ED values.")
-
-    #   Warning  Prefix matching rules apply to parse_known_args().
-    #  The parser may consume an option even if it’s just a prefix of one of its known options, instead of leaving it in the remaining arguments list.
-    args, cmdLineArgs = parser.parse_known_args()
-
-    # Get the path of the executables in order to determine the location of other scripts
-    executablePath = os.path.dirname(__file__)
-
-    # Remaining argument options are used for IntaRNA
-    cmdLineArgs = " ".join(cmdLineArgs)
-
-    # tAccW = 150
-    # tAccL = 100
-    # tIntLenMax = tAccW
-
-    # # list of invalid command line arguments for intaRNA
-    # illegalArgs = ["--qAccW", "--qAccL", "--qAcc", "--tAccW", "--tAccL", "--tAcc", "--qIntLenMax", "--tIntLenMax"]
-
-    # # check for illegal arguments
-    # for argument in illegalArgs:
-    #     if argument in cmdLineArgs:
-    #         sys.exit("The following intaRNA command line parameter is currently not supported in the benchmark: " + argument)
-
-
-    # Check whether a callID was given
-    if args.callID == "":
-        sys.exit("No callID was specified! Please specify a callID using -c <name> or --callID=<name>")
-
-    # Check whether intaRNA path exists
-    if not os.path.exists(args.intaRNAbinary):
-        sys.exit("Error!!! IntaRNA filePath does not exist! Please specify it using -b <intaRNAbinary>!")
-
-    # Create outputFolder for this callID if not existing
-    if not os.path.exists(os.path.join(args.outputPath, args.callID)):
-        os.makedirs(os.path.join(args.outputPath, args.callID))
+        description="Run local IntaRNA predictions and benchmark.py, without Conda or a scheduler.",
+        epilog="Pass IntaRNA options after --, e.g. -- --threads=4 --model=X. "
+               "Short options after -- belong to IntaRNA, not this runner.", allow_abbrev=False)
+    parser.add_argument("-b", "--intaRNAbinary", default="IntaRNA", help="executable path or name on PATH")
+    parser.add_argument("-i", "--infile", type=Path, default=ROOT / "input", help="dataset directory")
+    parser.add_argument("-o", "--outfile", type=Path, default=ROOT / "output", help="results directory")
+    parser.add_argument("-c", "--callID", required=True, help="unique run ID (letters, digits, dot, underscore, hyphen)")
+    parser.add_argument("-n", "--callsOnly", action="store_true", help="write commands without executing any IntaRNA calls")
+    parser.add_argument("-e", "--withTargetED", action="store_true", help="precompute target ED once per target for this run")
+    parser.add_argument("-v", "--verified", type=Path, default=ROOT / "verified_interactions.csv")
+    parser.add_argument("-m", "--maxInteractionLength", type=int, help="set --tIntLenMax for precomputation AND predictions")
+    parser.add_argument("-a", "--arguments", default="", help="quoted IntaRNA options (alternative to --)")
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if "--" in argv:
+        boundary = argv.index("--")
+        args = parser.parse_args(argv[:boundary])
+        extra = argv[boundary + 1:]
     else:
-        sys.exit("Error!!! A directory for callID %s already exists!" % args.callID)
+        args, extra = parser.parse_known_args(argv)
+    try:
+        extra = shlex.split(args.arguments) + extra
+        validate_arguments(extra, args.withTargetED)
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", args.callID):
+            raise ValueError("callID must start with a letter or digit and contain only letters, digits, ., _, -")
+        binary = executable(args.intaRNAbinary)
+        if args.maxInteractionLength is not None:
+            if args.maxInteractionLength < 0 or option_names(extra) & {"--tIntLenMax", "--intLenMax"}:
+                raise ValueError("Use a nonnegative -m or an IntaRNA length option, not both")
+            extra += ["--tIntLenMax=" + str(args.maxInteractionLength)]
+        if "--threads" not in option_names(extra):
+            extra.append("--threads=1")
+        jobs = collect_inputs(args.infile.resolve())
+        if not args.verified.is_file():
+            raise ValueError("Verified interactions file not found: " + str(args.verified))
+        if not args.callsOnly:
+            if importlib.util.find_spec("pandas") is None:
+                raise ValueError("Install pandas in this Python environment before running the benchmark")
+            subprocess.run(["/usr/bin/time", "--version"], check=True, stdout=subprocess.DEVNULL)
+        output = args.outfile.resolve() / args.callID
+        output.mkdir(parents=True, exist_ok=False)
+    except (OSError, ValueError, subprocess.CalledProcessError) as error:
+        parser.error(str(error))
 
-    # Organisms
-    organisms = [x.split(os.path.sep)[-1] for x in glob.glob(os.path.join(args.inputPath, "*")) if os.path.isdir(x)]
-    if organisms == []:
-        sys.exit("Input folder is empty!")
+    metadata = dict(callID=args.callID, binary=binary, arguments=extra, predictions=jobs,
+                    verified=str(args.verified.resolve()), status="planned" if args.callsOnly else "running",
+                    runtime_unit="user CPU seconds", memory_unit="KiB", python=sys.version,
+                    precomputation=[])
+    manifest = output / "run.json"
 
+    def save_metadata():
+        manifest.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
 
-    # Compute target ED-value files for each organism and option enabled (if not existant)
-    if (args.enabledTargetED):
-        print("Preprocessing target ED-values!!")
-        for organism in organisms:
-            target_files = []
-            for ending in fastaFileEndings:
-                target_files.extend(glob.glob(os.path.join(args.inputPath, organism, "target", "*" + ending)))
-            target_files.sort()
+    save_metadata()
+    try:
+        if not args.callsOnly:
+            metadata["version"] = subprocess.check_output([binary, "--version"], text=True, stderr=subprocess.STDOUT).strip()
+            with open(binary, "rb") as handle:
+                metadata["binary_sha256"] = hashlib.file_digest(handle, "sha256").hexdigest() if sys.version_info >= (3, 11) else hashlib.sha256(handle.read()).hexdigest()
+            save_metadata()
+        measurements = []
+        ed_files = {}
+        with (output / "calls.txt").open("w", encoding="utf-8") as log:
+            def execute(command):
+                print(shlex.join(command), file=log, flush=True)
+                print(shlex.join(command), flush=True)
+                if not args.callsOnly:
+                    return runSubprocess(command)
+                return "NA", "NA"
 
-            for target in target_files:
-                target_name = os.path.basename(os.path.splitext(target)[0])
-                edValueFolder = os.path.join(args.outputPath, "ED-values", organism, target_name)
-                if not os.path.exists(edValueFolder):
-                    os.makedirs(edValueFolder)
-                    call = args.intaRNAbinary + " -q " + "AAAAAAAA" \
-                                              + " -t " + target + " --noSeed" \
-                                              + " -n 0 --out=/dev/null" \
-                                              + " --out=tAcc:" + os.path.join(edValueFolder, "intarna.target.ed")
+            for job in jobs:
+                prediction_args = list(extra)
+                if args.withTargetED:
+                    if job["target"] not in ed_files:
+                        ed_dir = output / "ED-values" / job["organism"] / job["target_name"]
+                        ed_dir.mkdir(parents=True)
+                        ed_file = ed_dir / "intarna.target.ed"
+                        # Same binary, target and parameters as the prediction.
+                        # -n 0 skips interactions but still computes accessibility.
+                        ed_cpu, ed_memory = execute([binary, *extra, "-q", job["query"], "-t", job["target"],
+                                 "-n", "0", "--out", os.devnull, "--out=tAcc:" + str(ed_file)])
+                        metadata["precomputation"].append(dict(target=job["target"],
+                                                              user_cpu_seconds=ed_cpu, peak_rss_kib=ed_memory))
+                        ed_files[job["target"]] = ed_file
+                    prediction_args += ["--tAcc=E", "--tAccFile=" + str(ed_files[job["target"]])]
+                cpu, memory = execute([binary, *prediction_args, "-q", job["query"], "-t", job["target"],
+                                       "--out", str(output / job["output"]), "--outMode=C", "--outNumber=1"])
+                measurements.append((job, cpu, memory))
 
-                    # if user enables threading, also add it to the precomputation of target ED values
-                    if "threads " in cmdLineArgs:
-                        call += " --threads " + cmdLineArgs.split("threads ")[-1].split(" ")[0]
-                    elif "threads=" in cmdLineArgs:
-                        call += " --threads=" + cmdLineArgs.split("threads=")[-1].split(" ")[0]
-
-                    # call
-                    callArgs = shlex.split(call, posix=False)
-                    runSubprocess(callArgs)
-
-        print("Preprocessing completed!")
-
-    # Filepaths
-    callLogFilePath = os.path.join(args.outputPath, args.callID, "calls.txt")
-    timeLogFilePath = os.path.join(args.outputPath, args.callID, "runTime.csv")
-    memoryLogFilePath = os.path.join(args.outputPath, args.callID, "memoryUsage.csv")
-
-    for organism in organisms:
-        # check if query and target folder exist
-        if not os.path.exists(os.path.join(args.inputPath, organism, "query")):
-            sys.exit("Error!!! Could not find query path for %s!" % organism)
-        if not os.path.exists(os.path.join(args.inputPath, organism, "target")):
-            sys.exit("Error!!! Could not find target path for %s!" % organism)
-
-
-        srna_files = []
-        target_files = []
-        for ending in fastaFileEndings:
-            srna_files.extend(glob.glob(os.path.join(args.inputPath, organism, "query", "*" + ending)))
-            target_files.extend(glob.glob(os.path.join(args.inputPath, organism, "target", "*" + ending)))
-
-        # Sort input
-        srna_files.sort()
-        target_files.sort()
-
-        # Check whether input exists
-        if len(srna_files) == 0:
-            sys.exit("Error!!! No srna fasta files found in query folder!")
-        if len(target_files) == 0:
-            sys.exit("Error!!! No target fasta files found in target folder!")
-
-        for target_file in target_files:
-            target_name = os.path.basename(os.path.splitext(target_file)[0])
-            # Variables to create the timeLog table
-            header = "callID;target_name;Organism"
-            timeLine = "%s;%s;%s" % (args.callID, target_name, organism)
-            memoryLine = "%s;%s;%s" % (args.callID, target_name, organism)
-
-            for srna_file in srna_files:
-                srna_name = srna_file.split(os.path.sep)[-1].split("_")[0]
-                header += ";%s" % srna_name
-
-                # Outputfilepath
-                out = os.path.join(args.outputPath, args.callID, srna_name + "_" + target_name + ".csv")
-
-                # IntaRNA call
-                call = args.intaRNAbinary + " -q " + srna_file \
-                                          + " -t " + target_file \
-                                          + " --out " + out \
-                                          + " --outMode C " \
-                                          + cmdLineArgs
-
-                if (args.enabledTargetED):
-                    call += " --tAcc=E --tAccFile=" \
-                         + os.path.join(args.outputPath, "ED-values", organism, target_name, "intarna.target.ed") \
-
-                print(call, file=open(callLogFilePath, "a"))
-                if not args.noJobStart:
-                    # add stats to call
-                    call = "/usr/bin/time -v " + call
-                    # split call for subprocess creation
-                    callArgs = shlex.split(call, posix=False)
-                    # do call and get process information
-                    timeCall, maxMemory = runSubprocess(callArgs)
-                    # store process information
-                    # Time in seconds
-                    timeLine += ";" + timeCall
-                    # Convert to megabyte (MB)
-                    memoryLine += ";" + maxMemory
-                else:
-                    # store that process information not available (NA)
-                    timeLine += ";NA"
-                    memoryLine += ";NA"
-
-            if not os.path.exists(timeLogFilePath):
-                # print header if file is empty
-                print(header, file=open(timeLogFilePath, "a"))
-            print(timeLine, file=open(timeLogFilePath, "a"))
-
-            if not os.path.exists(memoryLogFilePath):
-                # print header if file is empty
-                print(header, file=open(memoryLogFilePath, "a"))
-            print(memoryLine, file=open(memoryLogFilePath, "a"))
-
-    if not args.noJobStart:
-        # Start benchmarking for this callID
-        callBenchmark = "python3 " + os.path.join(executablePath, "benchmark.py") \
-                                   + " -c " + args.callID \
-                                   + " -i " + args.verified_interactions \
-                                   + " -p " + args.outputPath
-        with Popen(shlex.split(callBenchmark, posix=False), stdout=PIPE) as process:
-            print(str(process.stdout.read(), "utf-8"))
+        # A union header keeps datasets with different query sets rectangular.
+        srnas = sorted({job["srna"] for job in jobs})
+        for filename, index in (("runTime.csv", 1), ("memoryUsage.csv", 2)):
+            rows = {}
+            for entry in measurements:
+                job = entry[0]
+                key = (job["target_name"], job["organism"])
+                rows.setdefault(key, dict(callID=args.callID, target_name=key[0], Organism=key[1]))[job["srna"]] = entry[index]
+            with (output / filename).open("w", newline="", encoding="utf-8") as handle:
+                writer = csv.DictWriter(handle, ["callID", "target_name", "Organism", *srnas], delimiter=";", restval="NA")
+                writer.writeheader()
+                writer.writerows(rows.values())
+        if not args.callsOnly:
+            subprocess.run([sys.executable, str(ROOT / "bin" / "benchmark.py"), "-c", args.callID,
+                            "-i", str(args.verified.resolve()), "-p", str(args.outfile.resolve())], check=True)
+            metadata["status"] = "complete"
+        save_metadata()
+    except (OSError, ValueError, subprocess.CalledProcessError, KeyboardInterrupt) as error:
+        metadata["status"] = "failed"
+        metadata["error"] = str(error)
+        save_metadata()
+        print("Benchmark failed: " + str(error), file=sys.stderr)
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    sys.exit(main())
