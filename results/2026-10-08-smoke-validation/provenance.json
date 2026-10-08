@@ -1,0 +1,941 @@
+{
+  "scope": "smoke validation only; full benchmark not executed",
+  "checked_at_utc": "2026-10-08T08:13:48.975Z",
+  "acquisition_date": "2026-10-07",
+  "repository": "https://github.com/BackofenLab/IntaRNA-benchmark",
+  "implementation_snapshot": "71f05db5f6fe177f6e7491fa95651c7777349733",
+  "source_note": "Acquired during PR #23 development; per-run source hashes were not recorded. The implementation was subsequently committed at the snapshot above.",
+  "reviewed_master": "6eaff33772596b81f10076195fab5025d8463484",
+  "version": "IntaRNA 3.4.1\n using Vienna RNA package 2.7.2 and boost 1.85.0",
+  "binary_sha256": "3779a676dd6a96e6edf9fe9a7316c2125466d0c33be51723661eb1513dfcdd64",
+  "runtime_unit": "user CPU seconds",
+  "memory_unit": "KiB",
+  "noGU_interpretation": "--outNoGUend=true; no clarification was posted on issue 255",
+  "verified_full_file_sha256": "6468b0b1fdb1efce176aec3e0d4a34bf277c2f8316924dda4b5aaca2470324e9",
+  "python_version_recorded": "3.12.7 | packaged by conda-forge | (main, Oct  4 2024, 16:05:46) [GCC 13.3.0]",
+  "runs": [
+    {
+      "callID": "intarna-X-noLP-false-noGU-false",
+      "status": "complete",
+      "arguments": [
+        "--model=X",
+        "--outNoLP=false",
+        "--threads=1"
+      ],
+      "jobs": [
+        {
+          "organism": "NC_000913",
+          "srna": "ArcZ",
+          "query": "fixture/NC_000913/query/ArcZ_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ArcZ_NC_000913.csv",
+          "prediction_sha256": "ee429c436f43ca87dda90016c57d79fcab921d8d4887bd1e2a7e84e9dfa15777",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_000913",
+          "srna": "ChiX",
+          "query": "fixture/NC_000913/query/ChiX_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ChiX_NC_000913.csv",
+          "prediction_sha256": "7d11a759d094e494f82cdc0eea0f5dff40da46c8f139afe2e51af8c2a3c65341",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ArcZ",
+          "query": "fixture/NC_003197/query/ArcZ_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ArcZ_NC_003197.csv",
+          "prediction_sha256": "0ae83a2bbebcddfd68fe48d03a130dacc10ccc372146bf869917cbc9af9aa8e3",
+          "prediction_rows": 3,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ChiX",
+          "query": "fixture/NC_003197/query/ChiX_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ChiX_NC_003197.csv",
+          "prediction_sha256": "277bc7cb8b1d68e2a1e3766653126c8e4275a7fe618fb34bb9cba5e86ad9dc4f",
+          "prediction_rows": 3,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        }
+      ]
+    },
+    {
+      "callID": "intarna-X-noLP-false-noGU-true",
+      "status": "complete",
+      "arguments": [
+        "--model=X",
+        "--outNoLP=false",
+        "--outNoGUend=true",
+        "--threads=1"
+      ],
+      "jobs": [
+        {
+          "organism": "NC_000913",
+          "srna": "ArcZ",
+          "query": "fixture/NC_000913/query/ArcZ_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ArcZ_NC_000913.csv",
+          "prediction_sha256": "73e9fd50bffa7370daac71801d651f10ed476a154f6500e0bacd9a793ea7b6da",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_000913",
+          "srna": "ChiX",
+          "query": "fixture/NC_000913/query/ChiX_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ChiX_NC_000913.csv",
+          "prediction_sha256": "7d11a759d094e494f82cdc0eea0f5dff40da46c8f139afe2e51af8c2a3c65341",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ArcZ",
+          "query": "fixture/NC_003197/query/ArcZ_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ArcZ_NC_003197.csv",
+          "prediction_sha256": "b7eee0df7a205a6745fa3a2c0aa3f2d408fbc1b31c270678856d92d8dd166d46",
+          "prediction_rows": 2,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ChiX",
+          "query": "fixture/NC_003197/query/ChiX_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ChiX_NC_003197.csv",
+          "prediction_sha256": "239d8a1532d6143538b8efb4ffe14e04873e9882a69aeeceb01f257bbe646564",
+          "prediction_rows": 3,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        }
+      ]
+    },
+    {
+      "callID": "intarna-X-noLP-true-noGU-false",
+      "status": "complete",
+      "arguments": [
+        "--model=X",
+        "--outNoLP=true",
+        "--threads=1"
+      ],
+      "jobs": [
+        {
+          "organism": "NC_000913",
+          "srna": "ArcZ",
+          "query": "fixture/NC_000913/query/ArcZ_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ArcZ_NC_000913.csv",
+          "prediction_sha256": "e4cc16991d7f962d2b986609540b2e7d2cab2726a99123c245369b809672fb7a",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_000913",
+          "srna": "ChiX",
+          "query": "fixture/NC_000913/query/ChiX_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ChiX_NC_000913.csv",
+          "prediction_sha256": "7d11a759d094e494f82cdc0eea0f5dff40da46c8f139afe2e51af8c2a3c65341",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ArcZ",
+          "query": "fixture/NC_003197/query/ArcZ_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ArcZ_NC_003197.csv",
+          "prediction_sha256": "8f9dd85716effa0323a6b012fec18efd15bc37a642c396e9dca37173f3ed2d3f",
+          "prediction_rows": 3,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ChiX",
+          "query": "fixture/NC_003197/query/ChiX_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ChiX_NC_003197.csv",
+          "prediction_sha256": "277bc7cb8b1d68e2a1e3766653126c8e4275a7fe618fb34bb9cba5e86ad9dc4f",
+          "prediction_rows": 3,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        }
+      ]
+    },
+    {
+      "callID": "intarna-X-noLP-true-noGU-true",
+      "status": "complete",
+      "arguments": [
+        "--model=X",
+        "--outNoLP=true",
+        "--outNoGUend=true",
+        "--threads=1"
+      ],
+      "jobs": [
+        {
+          "organism": "NC_000913",
+          "srna": "ArcZ",
+          "query": "fixture/NC_000913/query/ArcZ_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ArcZ_NC_000913.csv",
+          "prediction_sha256": "73e9fd50bffa7370daac71801d651f10ed476a154f6500e0bacd9a793ea7b6da",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_000913",
+          "srna": "ChiX",
+          "query": "fixture/NC_000913/query/ChiX_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ChiX_NC_000913.csv",
+          "prediction_sha256": "7d11a759d094e494f82cdc0eea0f5dff40da46c8f139afe2e51af8c2a3c65341",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ArcZ",
+          "query": "fixture/NC_003197/query/ArcZ_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ArcZ_NC_003197.csv",
+          "prediction_sha256": "b7eee0df7a205a6745fa3a2c0aa3f2d408fbc1b31c270678856d92d8dd166d46",
+          "prediction_rows": 2,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ChiX",
+          "query": "fixture/NC_003197/query/ChiX_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ChiX_NC_003197.csv",
+          "prediction_sha256": "fd0692a925abe1d1c6bda5bcf6e25f1580b815fa2d2d02aad9926313f096a621",
+          "prediction_rows": 3,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        }
+      ]
+    },
+    {
+      "callID": "intarna-default",
+      "status": "complete",
+      "arguments": [
+        "--threads=1"
+      ],
+      "jobs": [
+        {
+          "organism": "NC_000913",
+          "srna": "ArcZ",
+          "query": "fixture/NC_000913/query/ArcZ_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ArcZ_NC_000913.csv",
+          "prediction_sha256": "ee429c436f43ca87dda90016c57d79fcab921d8d4887bd1e2a7e84e9dfa15777",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_000913",
+          "srna": "ChiX",
+          "query": "fixture/NC_000913/query/ChiX_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ChiX_NC_000913.csv",
+          "prediction_sha256": "7d11a759d094e494f82cdc0eea0f5dff40da46c8f139afe2e51af8c2a3c65341",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ArcZ",
+          "query": "fixture/NC_003197/query/ArcZ_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ArcZ_NC_003197.csv",
+          "prediction_sha256": "0ae83a2bbebcddfd68fe48d03a130dacc10ccc372146bf869917cbc9af9aa8e3",
+          "prediction_rows": 3,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ChiX",
+          "query": "fixture/NC_003197/query/ChiX_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ChiX_NC_003197.csv",
+          "prediction_sha256": "277bc7cb8b1d68e2a1e3766653126c8e4275a7fe618fb34bb9cba5e86ad9dc4f",
+          "prediction_rows": 3,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        }
+      ]
+    },
+    {
+      "callID": "intarnakix-A-noGU-false",
+      "status": "complete",
+      "arguments": [
+        "--personality=IntaRNAkix",
+        "--kineticScore=A",
+        "--threads=1"
+      ],
+      "jobs": [
+        {
+          "organism": "NC_000913",
+          "srna": "ArcZ",
+          "query": "fixture/NC_000913/query/ArcZ_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ArcZ_NC_000913.csv",
+          "prediction_sha256": "e4cc16991d7f962d2b986609540b2e7d2cab2726a99123c245369b809672fb7a",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_000913",
+          "srna": "ChiX",
+          "query": "fixture/NC_000913/query/ChiX_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ChiX_NC_000913.csv",
+          "prediction_sha256": "d5ced8eb8d200485490e1c2be3aaf32293540e82477c07bb79d2d39468be2fe8",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ArcZ",
+          "query": "fixture/NC_003197/query/ArcZ_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ArcZ_NC_003197.csv",
+          "prediction_sha256": "77489f45277c47046c748b10c696c89a79e0e6db9082a1ac6f13cadb12822f53",
+          "prediction_rows": 3,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ChiX",
+          "query": "fixture/NC_003197/query/ChiX_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ChiX_NC_003197.csv",
+          "prediction_sha256": "0b0ed5186a47c62dfa15d2d8c358aba6c8055e9847bb698d937f8bddfff57188",
+          "prediction_rows": 3,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        }
+      ]
+    },
+    {
+      "callID": "intarnakix-A-noGU-true",
+      "status": "complete",
+      "arguments": [
+        "--personality=IntaRNAkix",
+        "--kineticScore=A",
+        "--outNoGUend=true",
+        "--threads=1"
+      ],
+      "jobs": [
+        {
+          "organism": "NC_000913",
+          "srna": "ArcZ",
+          "query": "fixture/NC_000913/query/ArcZ_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ArcZ_NC_000913.csv",
+          "prediction_sha256": "73e9fd50bffa7370daac71801d651f10ed476a154f6500e0bacd9a793ea7b6da",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_000913",
+          "srna": "ChiX",
+          "query": "fixture/NC_000913/query/ChiX_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ChiX_NC_000913.csv",
+          "prediction_sha256": "d5ced8eb8d200485490e1c2be3aaf32293540e82477c07bb79d2d39468be2fe8",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ArcZ",
+          "query": "fixture/NC_003197/query/ArcZ_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ArcZ_NC_003197.csv",
+          "prediction_sha256": "b7eee0df7a205a6745fa3a2c0aa3f2d408fbc1b31c270678856d92d8dd166d46",
+          "prediction_rows": 2,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ChiX",
+          "query": "fixture/NC_003197/query/ChiX_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ChiX_NC_003197.csv",
+          "prediction_sha256": "3a09d1d7bc338ab109b6582d45067e0eaa5b886d6bda81462bf7f6b54acfa474",
+          "prediction_rows": 3,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        }
+      ]
+    },
+    {
+      "callID": "intarnakix-B-noGU-false",
+      "status": "complete",
+      "arguments": [
+        "--personality=IntaRNAkix",
+        "--kineticScore=B",
+        "--threads=1"
+      ],
+      "jobs": [
+        {
+          "organism": "NC_000913",
+          "srna": "ArcZ",
+          "query": "fixture/NC_000913/query/ArcZ_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ArcZ_NC_000913.csv",
+          "prediction_sha256": "e4cc16991d7f962d2b986609540b2e7d2cab2726a99123c245369b809672fb7a",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_000913",
+          "srna": "ChiX",
+          "query": "fixture/NC_000913/query/ChiX_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ChiX_NC_000913.csv",
+          "prediction_sha256": "d5ced8eb8d200485490e1c2be3aaf32293540e82477c07bb79d2d39468be2fe8",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ArcZ",
+          "query": "fixture/NC_003197/query/ArcZ_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ArcZ_NC_003197.csv",
+          "prediction_sha256": "8f9dd85716effa0323a6b012fec18efd15bc37a642c396e9dca37173f3ed2d3f",
+          "prediction_rows": 3,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ChiX",
+          "query": "fixture/NC_003197/query/ChiX_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ChiX_NC_003197.csv",
+          "prediction_sha256": "0b0ed5186a47c62dfa15d2d8c358aba6c8055e9847bb698d937f8bddfff57188",
+          "prediction_rows": 3,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        }
+      ]
+    },
+    {
+      "callID": "intarnakix-B-noGU-true",
+      "status": "complete",
+      "arguments": [
+        "--personality=IntaRNAkix",
+        "--kineticScore=B",
+        "--outNoGUend=true",
+        "--threads=1"
+      ],
+      "jobs": [
+        {
+          "organism": "NC_000913",
+          "srna": "ArcZ",
+          "query": "fixture/NC_000913/query/ArcZ_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ArcZ_NC_000913.csv",
+          "prediction_sha256": "73e9fd50bffa7370daac71801d651f10ed476a154f6500e0bacd9a793ea7b6da",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_000913",
+          "srna": "ChiX",
+          "query": "fixture/NC_000913/query/ChiX_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ChiX_NC_000913.csv",
+          "prediction_sha256": "d5ced8eb8d200485490e1c2be3aaf32293540e82477c07bb79d2d39468be2fe8",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ArcZ",
+          "query": "fixture/NC_003197/query/ArcZ_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ArcZ_NC_003197.csv",
+          "prediction_sha256": "b7eee0df7a205a6745fa3a2c0aa3f2d408fbc1b31c270678856d92d8dd166d46",
+          "prediction_rows": 2,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ChiX",
+          "query": "fixture/NC_003197/query/ChiX_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ChiX_NC_003197.csv",
+          "prediction_sha256": "3a09d1d7bc338ab109b6582d45067e0eaa5b886d6bda81462bf7f6b54acfa474",
+          "prediction_rows": 3,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        }
+      ]
+    },
+    {
+      "callID": "intarnakix-C-noGU-false",
+      "status": "complete",
+      "arguments": [
+        "--personality=IntaRNAkix",
+        "--kineticScore=C",
+        "--threads=1"
+      ],
+      "jobs": [
+        {
+          "organism": "NC_000913",
+          "srna": "ArcZ",
+          "query": "fixture/NC_000913/query/ArcZ_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ArcZ_NC_000913.csv",
+          "prediction_sha256": "e4cc16991d7f962d2b986609540b2e7d2cab2726a99123c245369b809672fb7a",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_000913",
+          "srna": "ChiX",
+          "query": "fixture/NC_000913/query/ChiX_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ChiX_NC_000913.csv",
+          "prediction_sha256": "d5ced8eb8d200485490e1c2be3aaf32293540e82477c07bb79d2d39468be2fe8",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ArcZ",
+          "query": "fixture/NC_003197/query/ArcZ_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ArcZ_NC_003197.csv",
+          "prediction_sha256": "77489f45277c47046c748b10c696c89a79e0e6db9082a1ac6f13cadb12822f53",
+          "prediction_rows": 3,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ChiX",
+          "query": "fixture/NC_003197/query/ChiX_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ChiX_NC_003197.csv",
+          "prediction_sha256": "0b0ed5186a47c62dfa15d2d8c358aba6c8055e9847bb698d937f8bddfff57188",
+          "prediction_rows": 3,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        }
+      ]
+    },
+    {
+      "callID": "intarnakix-C-noGU-true",
+      "status": "complete",
+      "arguments": [
+        "--personality=IntaRNAkix",
+        "--kineticScore=C",
+        "--outNoGUend=true",
+        "--threads=1"
+      ],
+      "jobs": [
+        {
+          "organism": "NC_000913",
+          "srna": "ArcZ",
+          "query": "fixture/NC_000913/query/ArcZ_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ArcZ_NC_000913.csv",
+          "prediction_sha256": "73e9fd50bffa7370daac71801d651f10ed476a154f6500e0bacd9a793ea7b6da",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_000913",
+          "srna": "ChiX",
+          "query": "fixture/NC_000913/query/ChiX_NC_000913.fasta",
+          "target": "fixture/NC_000913/target/NC_000913.fa",
+          "prediction_file": "ChiX_NC_000913.csv",
+          "prediction_sha256": "d5ced8eb8d200485490e1c2be3aaf32293540e82477c07bb79d2d39468be2fe8",
+          "prediction_rows": 3,
+          "target_ids": [
+            "b0619",
+            "b1892",
+            "b2741"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ArcZ",
+          "query": "fixture/NC_003197/query/ArcZ_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ArcZ_NC_003197.csv",
+          "prediction_sha256": "b7eee0df7a205a6745fa3a2c0aa3f2d408fbc1b31c270678856d92d8dd166d46",
+          "prediction_rows": 2,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        },
+        {
+          "organism": "NC_003197",
+          "srna": "ChiX",
+          "query": "fixture/NC_003197/query/ChiX_NC_003197.fasta",
+          "target": "fixture/NC_003197/target/NC_003197.fa",
+          "prediction_file": "ChiX_NC_003197.csv",
+          "prediction_sha256": "3a09d1d7bc338ab109b6582d45067e0eaa5b886d6bda81462bf7f6b54acfa474",
+          "prediction_rows": 3,
+          "target_ids": [
+            "STM0687",
+            "STM1682",
+            "STM2970"
+          ]
+        }
+      ]
+    }
+  ],
+  "ed_equivalence": [
+    {
+      "direct_run": "smoke-default",
+      "cached_run": "smoke-ed",
+      "arguments": [
+        "--threads=1"
+      ],
+      "predictions_identical": [
+        {
+          "file": "ArcZ_NC_000913.csv",
+          "sha256": "ee429c436f43ca87dda90016c57d79fcab921d8d4887bd1e2a7e84e9dfa15777"
+        },
+        {
+          "file": "ChiX_NC_000913.csv",
+          "sha256": "7d11a759d094e494f82cdc0eea0f5dff40da46c8f139afe2e51af8c2a3c65341"
+        },
+        {
+          "file": "ArcZ_NC_003197.csv",
+          "sha256": "0ae83a2bbebcddfd68fe48d03a130dacc10ccc372146bf869917cbc9af9aa8e3"
+        },
+        {
+          "file": "ChiX_NC_003197.csv",
+          "sha256": "277bc7cb8b1d68e2a1e3766653126c8e4275a7fe618fb34bb9cba5e86ad9dc4f"
+        }
+      ],
+      "ranks_equal": true
+    },
+    {
+      "direct_run": "smoke-kix-settings",
+      "cached_run": "smoke-kix-settings-ed",
+      "arguments": [
+        "--personality=IntaRNAkix",
+        "--kineticScore=C",
+        "--tAccW=90",
+        "--tAccL=60",
+        "--temperature=25",
+        "--tIntLenMax=60",
+        "--threads=1"
+      ],
+      "predictions_identical": [
+        {
+          "file": "ArcZ_NC_000913.csv",
+          "sha256": "67f504960a02f7186d68f54655304985364b5fd246cd6e660908839d7fbd3d5c"
+        },
+        {
+          "file": "ChiX_NC_000913.csv",
+          "sha256": "59121608001e07c26c00c7946195cedbb106f45ab23a67a1d6ace5b483f3fce2"
+        },
+        {
+          "file": "ArcZ_NC_003197.csv",
+          "sha256": "4d786bd450c701e57b95fc9e7c69d5580763baf7b2bbaf5817f089eb16aa7cfe"
+        },
+        {
+          "file": "ChiX_NC_003197.csv",
+          "sha256": "eca77ca9f78bb89798f7f141681a076f23640efa6df607949e6ff47f979b2739"
+        }
+      ],
+      "ranks_equal": true
+    }
+  ],
+  "source_file_sha256": {
+    "output/smoke-matrix/intarna-X-noLP-false-noGU-false/ArcZ_NC_000913.csv": "ee429c436f43ca87dda90016c57d79fcab921d8d4887bd1e2a7e84e9dfa15777",
+    "output/smoke-matrix/intarna-X-noLP-false-noGU-false/ChiX_NC_000913.csv": "7d11a759d094e494f82cdc0eea0f5dff40da46c8f139afe2e51af8c2a3c65341",
+    "output/smoke-matrix/intarna-X-noLP-false-noGU-false/ArcZ_NC_003197.csv": "0ae83a2bbebcddfd68fe48d03a130dacc10ccc372146bf869917cbc9af9aa8e3",
+    "output/smoke-matrix/intarna-X-noLP-false-noGU-false/ChiX_NC_003197.csv": "277bc7cb8b1d68e2a1e3766653126c8e4275a7fe618fb34bb9cba5e86ad9dc4f",
+    "output/smoke-matrix/intarna-X-noLP-false-noGU-false/run.json": "31df52573700913fa2854215d079f55e1b0f65f5fd263b7bb77f390320e0b8af",
+    "output/smoke-matrix/intarna-X-noLP-false-noGU-false/benchmark.csv": "ecf682c976418391e306e6dec7478c54ded9b428502b1b870ecea8ea37d2b148",
+    "output/smoke-matrix/intarna-X-noLP-false-noGU-false/runTime.csv": "0ca33b635e9cc94496b471cbbfdcf08192b19b49b5b4c971a724e6f35ec216bd",
+    "output/smoke-matrix/intarna-X-noLP-false-noGU-false/memoryUsage.csv": "b152004a925b41bfa8bdfae5e28be6c88df7037b183ec5d3bb88294510fe3249",
+    "output/smoke-matrix/intarna-X-noLP-false-noGU-false/calls.txt": "e0b9950a0682facbf7fbd28cfa63408b33a112e6de62a96605ce94bcf730918d",
+    "output/smoke-matrix/intarna-X-noLP-false-noGU-true/ArcZ_NC_000913.csv": "73e9fd50bffa7370daac71801d651f10ed476a154f6500e0bacd9a793ea7b6da",
+    "output/smoke-matrix/intarna-X-noLP-false-noGU-true/ChiX_NC_000913.csv": "7d11a759d094e494f82cdc0eea0f5dff40da46c8f139afe2e51af8c2a3c65341",
+    "output/smoke-matrix/intarna-X-noLP-false-noGU-true/ArcZ_NC_003197.csv": "b7eee0df7a205a6745fa3a2c0aa3f2d408fbc1b31c270678856d92d8dd166d46",
+    "output/smoke-matrix/intarna-X-noLP-false-noGU-true/ChiX_NC_003197.csv": "239d8a1532d6143538b8efb4ffe14e04873e9882a69aeeceb01f257bbe646564",
+    "output/smoke-matrix/intarna-X-noLP-false-noGU-true/run.json": "ef9ea6b9cc324de1b97916c02b778ab5dd80602dab54edfe8d57543e60d201af",
+    "output/smoke-matrix/intarna-X-noLP-false-noGU-true/benchmark.csv": "a3579f3df3bc06fd0ea30f8362b920896f81c92e5856fc4f6b9cf30064b99691",
+    "output/smoke-matrix/intarna-X-noLP-false-noGU-true/runTime.csv": "73581fad516d934b884939468486a6f5ae2a0cff6b054bc77595af5c6dd9494e",
+    "output/smoke-matrix/intarna-X-noLP-false-noGU-true/memoryUsage.csv": "bf245dbd7d064c732a1f78d37899bfe1c035a82ac944ea08535ee8bbceea5288",
+    "output/smoke-matrix/intarna-X-noLP-false-noGU-true/calls.txt": "177bd12f6a048cfc5e91eec21bf7298123b9de541660a1e6e34bb60294bbea91",
+    "output/smoke-matrix/intarna-X-noLP-true-noGU-false/ArcZ_NC_000913.csv": "e4cc16991d7f962d2b986609540b2e7d2cab2726a99123c245369b809672fb7a",
+    "output/smoke-matrix/intarna-X-noLP-true-noGU-false/ChiX_NC_000913.csv": "7d11a759d094e494f82cdc0eea0f5dff40da46c8f139afe2e51af8c2a3c65341",
+    "output/smoke-matrix/intarna-X-noLP-true-noGU-false/ArcZ_NC_003197.csv": "8f9dd85716effa0323a6b012fec18efd15bc37a642c396e9dca37173f3ed2d3f",
+    "output/smoke-matrix/intarna-X-noLP-true-noGU-false/ChiX_NC_003197.csv": "277bc7cb8b1d68e2a1e3766653126c8e4275a7fe618fb34bb9cba5e86ad9dc4f",
+    "output/smoke-matrix/intarna-X-noLP-true-noGU-false/run.json": "7db457960e32ee544ccbca455bdbb337f4a55183547a34d4a5cb9f1c474dade0",
+    "output/smoke-matrix/intarna-X-noLP-true-noGU-false/benchmark.csv": "ae261bb2eeb1696d1eeed0cae3a2930f737c62eaa48e1369d7abf8534b752f30",
+    "output/smoke-matrix/intarna-X-noLP-true-noGU-false/runTime.csv": "d4c7cee3984f16fc49d2635cf22e43f49bb7e89b13adc32282534d2a600d2e8b",
+    "output/smoke-matrix/intarna-X-noLP-true-noGU-false/memoryUsage.csv": "5ffd5e1e168a46fafbc78c3bc21564951c98a6fda23755c5374c9c8623f01687",
+    "output/smoke-matrix/intarna-X-noLP-true-noGU-false/calls.txt": "78379b4c4460c34c27078062f3859d08b4eacefbe18a1849b8deaecc83139efb",
+    "output/smoke-matrix/intarna-X-noLP-true-noGU-true/ArcZ_NC_000913.csv": "73e9fd50bffa7370daac71801d651f10ed476a154f6500e0bacd9a793ea7b6da",
+    "output/smoke-matrix/intarna-X-noLP-true-noGU-true/ChiX_NC_000913.csv": "7d11a759d094e494f82cdc0eea0f5dff40da46c8f139afe2e51af8c2a3c65341",
+    "output/smoke-matrix/intarna-X-noLP-true-noGU-true/ArcZ_NC_003197.csv": "b7eee0df7a205a6745fa3a2c0aa3f2d408fbc1b31c270678856d92d8dd166d46",
+    "output/smoke-matrix/intarna-X-noLP-true-noGU-true/ChiX_NC_003197.csv": "fd0692a925abe1d1c6bda5bcf6e25f1580b815fa2d2d02aad9926313f096a621",
+    "output/smoke-matrix/intarna-X-noLP-true-noGU-true/run.json": "6b32f1e34978401cbcf99ed30c04037ba0cf797392ea3599fd9f7ba92f8c7f99",
+    "output/smoke-matrix/intarna-X-noLP-true-noGU-true/benchmark.csv": "6d33c45d1abeee272e5e526aa36133043cd1651a7657599b4d7d6736cadc6e3e",
+    "output/smoke-matrix/intarna-X-noLP-true-noGU-true/runTime.csv": "f688d22c7f1a19f2fdbfe982ba333de6b09b06ebb20ad837c3c1eaa51b063a36",
+    "output/smoke-matrix/intarna-X-noLP-true-noGU-true/memoryUsage.csv": "1b645500f6faea069553034c2511c24c3c00e8e085e351ee6701562400a4cdac",
+    "output/smoke-matrix/intarna-X-noLP-true-noGU-true/calls.txt": "57756f337f5693ebdea33d33170e81e98c5d1ad2dc7f670d51e325108b81bac5",
+    "output/smoke-matrix/intarna-default/ArcZ_NC_000913.csv": "ee429c436f43ca87dda90016c57d79fcab921d8d4887bd1e2a7e84e9dfa15777",
+    "output/smoke-matrix/intarna-default/ChiX_NC_000913.csv": "7d11a759d094e494f82cdc0eea0f5dff40da46c8f139afe2e51af8c2a3c65341",
+    "output/smoke-matrix/intarna-default/ArcZ_NC_003197.csv": "0ae83a2bbebcddfd68fe48d03a130dacc10ccc372146bf869917cbc9af9aa8e3",
+    "output/smoke-matrix/intarna-default/ChiX_NC_003197.csv": "277bc7cb8b1d68e2a1e3766653126c8e4275a7fe618fb34bb9cba5e86ad9dc4f",
+    "output/smoke-matrix/intarna-default/run.json": "18495ec832763ca1645e3ac487abbcdb3c22d9d528797b6e208fd53e1dda10c2",
+    "output/smoke-matrix/intarna-default/benchmark.csv": "60e9ec7bb34c29dc66086082caca95107e08019044277a0900aef4489596a2ff",
+    "output/smoke-matrix/intarna-default/runTime.csv": "f48313a56c27185c96e7edb6fc41a85b064076a502b2de478bdcc1e5fc115d68",
+    "output/smoke-matrix/intarna-default/memoryUsage.csv": "070ebfeaf0248a9ea1b205e6b60569af3f638e3471ed3976393b29443ecec79a",
+    "output/smoke-matrix/intarna-default/calls.txt": "31fd091d91d581afb444611ce8841130335cca81ccaa65426c0abcab8aa446ca",
+    "output/smoke-matrix/intarnakix-A-noGU-false/ArcZ_NC_000913.csv": "e4cc16991d7f962d2b986609540b2e7d2cab2726a99123c245369b809672fb7a",
+    "output/smoke-matrix/intarnakix-A-noGU-false/ChiX_NC_000913.csv": "d5ced8eb8d200485490e1c2be3aaf32293540e82477c07bb79d2d39468be2fe8",
+    "output/smoke-matrix/intarnakix-A-noGU-false/ArcZ_NC_003197.csv": "77489f45277c47046c748b10c696c89a79e0e6db9082a1ac6f13cadb12822f53",
+    "output/smoke-matrix/intarnakix-A-noGU-false/ChiX_NC_003197.csv": "0b0ed5186a47c62dfa15d2d8c358aba6c8055e9847bb698d937f8bddfff57188",
+    "output/smoke-matrix/intarnakix-A-noGU-false/run.json": "6ca8e134044e5ed1056c00464e65029f0279abfd9e6ef9df9a5422ae411db900",
+    "output/smoke-matrix/intarnakix-A-noGU-false/benchmark.csv": "39ec722e5f221583e41de3b51d03d4d87eacfb768e3541eec895207a1bc0f46d",
+    "output/smoke-matrix/intarnakix-A-noGU-false/runTime.csv": "ca9560db30b3bdc9005a208e59fdb75f28512922c45dbd34c08ca25622914832",
+    "output/smoke-matrix/intarnakix-A-noGU-false/memoryUsage.csv": "4cd3a57d770b1e45fdd9449735747c9808cf5f8d23cbc09d33a647447e681c7b",
+    "output/smoke-matrix/intarnakix-A-noGU-false/calls.txt": "1162f7c51bb0f882e0eb29e94444c90422b772dfb86e9be41e83d573b63fef23",
+    "output/smoke-matrix/intarnakix-A-noGU-true/ArcZ_NC_000913.csv": "73e9fd50bffa7370daac71801d651f10ed476a154f6500e0bacd9a793ea7b6da",
+    "output/smoke-matrix/intarnakix-A-noGU-true/ChiX_NC_000913.csv": "d5ced8eb8d200485490e1c2be3aaf32293540e82477c07bb79d2d39468be2fe8",
+    "output/smoke-matrix/intarnakix-A-noGU-true/ArcZ_NC_003197.csv": "b7eee0df7a205a6745fa3a2c0aa3f2d408fbc1b31c270678856d92d8dd166d46",
+    "output/smoke-matrix/intarnakix-A-noGU-true/ChiX_NC_003197.csv": "3a09d1d7bc338ab109b6582d45067e0eaa5b886d6bda81462bf7f6b54acfa474",
+    "output/smoke-matrix/intarnakix-A-noGU-true/run.json": "eb90a2227c2c2019d12fb8696d031b7df63ecabe811c6624441d34d6043845f5",
+    "output/smoke-matrix/intarnakix-A-noGU-true/benchmark.csv": "ee043da70a074fdd726f72c2cf249da2dd5add568034ff24caa1cb62167f12ae",
+    "output/smoke-matrix/intarnakix-A-noGU-true/runTime.csv": "787f40ac6f86834a954eedfa8b7c2306b4409aeccdc9cb5b845ad6671c8724a6",
+    "output/smoke-matrix/intarnakix-A-noGU-true/memoryUsage.csv": "fa5b9a68df77a53805a5e883d4b5ac110e7bbd14c7ca9010aff70b435dacd0cf",
+    "output/smoke-matrix/intarnakix-A-noGU-true/calls.txt": "5accad779d017bad168bcb211a30cf66c0bcd307d24669d1077a0250cad1b471",
+    "output/smoke-matrix/intarnakix-B-noGU-false/ArcZ_NC_000913.csv": "e4cc16991d7f962d2b986609540b2e7d2cab2726a99123c245369b809672fb7a",
+    "output/smoke-matrix/intarnakix-B-noGU-false/ChiX_NC_000913.csv": "d5ced8eb8d200485490e1c2be3aaf32293540e82477c07bb79d2d39468be2fe8",
+    "output/smoke-matrix/intarnakix-B-noGU-false/ArcZ_NC_003197.csv": "8f9dd85716effa0323a6b012fec18efd15bc37a642c396e9dca37173f3ed2d3f",
+    "output/smoke-matrix/intarnakix-B-noGU-false/ChiX_NC_003197.csv": "0b0ed5186a47c62dfa15d2d8c358aba6c8055e9847bb698d937f8bddfff57188",
+    "output/smoke-matrix/intarnakix-B-noGU-false/run.json": "b4677c3f7ed373ae71fce0a314800039342745f4010f6ebe36f03daca6a55d1e",
+    "output/smoke-matrix/intarnakix-B-noGU-false/benchmark.csv": "0abeae8ae8bf920d787a714013c242e3877681fbec46d94d2da008bd2b261a7d",
+    "output/smoke-matrix/intarnakix-B-noGU-false/runTime.csv": "f566be0685cdfbca809eb32d294e5bb69bcad575da25032c090bf50c95b7af2f",
+    "output/smoke-matrix/intarnakix-B-noGU-false/memoryUsage.csv": "11e3fa9fc871f26a4987ae7f27fa6398c7c597087bf0bfeefa5d29719535a0bc",
+    "output/smoke-matrix/intarnakix-B-noGU-false/calls.txt": "aee295218bedc46b9e0cd780a7c8c6641a7b07fb39b6b680e1a8ea7b3778a9e8",
+    "output/smoke-matrix/intarnakix-B-noGU-true/ArcZ_NC_000913.csv": "73e9fd50bffa7370daac71801d651f10ed476a154f6500e0bacd9a793ea7b6da",
+    "output/smoke-matrix/intarnakix-B-noGU-true/ChiX_NC_000913.csv": "d5ced8eb8d200485490e1c2be3aaf32293540e82477c07bb79d2d39468be2fe8",
+    "output/smoke-matrix/intarnakix-B-noGU-true/ArcZ_NC_003197.csv": "b7eee0df7a205a6745fa3a2c0aa3f2d408fbc1b31c270678856d92d8dd166d46",
+    "output/smoke-matrix/intarnakix-B-noGU-true/ChiX_NC_003197.csv": "3a09d1d7bc338ab109b6582d45067e0eaa5b886d6bda81462bf7f6b54acfa474",
+    "output/smoke-matrix/intarnakix-B-noGU-true/run.json": "63fbd33948a57f8d478ca66d1e6cd7bcafa845df6204222281cd3c47bee43c1e",
+    "output/smoke-matrix/intarnakix-B-noGU-true/benchmark.csv": "cbf543503a3c72ddd384da3bc060292ef678a4f6f8c7a81c3c6c898bbbbba33b",
+    "output/smoke-matrix/intarnakix-B-noGU-true/runTime.csv": "8ecc6cd0c7e58d26222fe82cbedd8907e9d80c7c2c2ec88438b10d0a3b2710bb",
+    "output/smoke-matrix/intarnakix-B-noGU-true/memoryUsage.csv": "3c13d9fb2d640c428aff8b35773ed9ff19ef2ece007130c0b7f4e9fb12a0e647",
+    "output/smoke-matrix/intarnakix-B-noGU-true/calls.txt": "cfd90a8d8200d9476b8ef228625ce7d09608acd72da1b822d615279c03877e64",
+    "output/smoke-matrix/intarnakix-C-noGU-false/ArcZ_NC_000913.csv": "e4cc16991d7f962d2b986609540b2e7d2cab2726a99123c245369b809672fb7a",
+    "output/smoke-matrix/intarnakix-C-noGU-false/ChiX_NC_000913.csv": "d5ced8eb8d200485490e1c2be3aaf32293540e82477c07bb79d2d39468be2fe8",
+    "output/smoke-matrix/intarnakix-C-noGU-false/ArcZ_NC_003197.csv": "77489f45277c47046c748b10c696c89a79e0e6db9082a1ac6f13cadb12822f53",
+    "output/smoke-matrix/intarnakix-C-noGU-false/ChiX_NC_003197.csv": "0b0ed5186a47c62dfa15d2d8c358aba6c8055e9847bb698d937f8bddfff57188",
+    "output/smoke-matrix/intarnakix-C-noGU-false/run.json": "b2e314238f1c41cf839fe7453e9346797740e0824c0e6512e7ea20e340ebe282",
+    "output/smoke-matrix/intarnakix-C-noGU-false/benchmark.csv": "635984f27dd9c1f177b1dd4a661ba7c8f2398af07513dcac078b9b25a3a634d0",
+    "output/smoke-matrix/intarnakix-C-noGU-false/runTime.csv": "8c0891d405d14aaf02092d43babf13e877899e091ff52bc9dea949f2ab9a4d05",
+    "output/smoke-matrix/intarnakix-C-noGU-false/memoryUsage.csv": "86242e27869a50e39167720fa59c20646d2dc6bd4433a2730c5be5c5d08f7895",
+    "output/smoke-matrix/intarnakix-C-noGU-false/calls.txt": "89043cba2e09e3dfaa4795d0be8c1a1b1a38a9eab47a8bb65ee02f04f253994f",
+    "output/smoke-matrix/intarnakix-C-noGU-true/ArcZ_NC_000913.csv": "73e9fd50bffa7370daac71801d651f10ed476a154f6500e0bacd9a793ea7b6da",
+    "output/smoke-matrix/intarnakix-C-noGU-true/ChiX_NC_000913.csv": "d5ced8eb8d200485490e1c2be3aaf32293540e82477c07bb79d2d39468be2fe8",
+    "output/smoke-matrix/intarnakix-C-noGU-true/ArcZ_NC_003197.csv": "b7eee0df7a205a6745fa3a2c0aa3f2d408fbc1b31c270678856d92d8dd166d46",
+    "output/smoke-matrix/intarnakix-C-noGU-true/ChiX_NC_003197.csv": "3a09d1d7bc338ab109b6582d45067e0eaa5b886d6bda81462bf7f6b54acfa474",
+    "output/smoke-matrix/intarnakix-C-noGU-true/run.json": "ab95f28dafc6afbdc876b28eb936bfc30f94be58a544d09d392817e2f5e10224",
+    "output/smoke-matrix/intarnakix-C-noGU-true/benchmark.csv": "6812c103f27882722e643bda78db4baec76b625dacbbdfc296d50ee5a90dae7e",
+    "output/smoke-matrix/intarnakix-C-noGU-true/runTime.csv": "61d2d9e10bd7808891c5479291d66358fd8fa261f7ef9376cae4db3048824873",
+    "output/smoke-matrix/intarnakix-C-noGU-true/memoryUsage.csv": "10f8c245590ec095c825040149ba33e7cf237b48d0b5832bc8a02ac360ed594a",
+    "output/smoke-matrix/intarnakix-C-noGU-true/calls.txt": "7781e0046904d4bb7e0ffdee7da0672f651755af55725b3f7ed53f1f1cbd64ea"
+  },
+  "excluded_failed_runs": {
+    "smoke-kix-custom": "tAccL=100 exceeds the explicitly requested tAccW=90",
+    "smoke-kix-custom-ed": "same invalid accessibility settings; no benchmark.csv produced"
+  },
+  "full_input_plan": {
+    "status": "planned",
+    "prediction_calls": 30,
+    "ed_precomputations": 2
+  },
+  "current_master_dry_run_check": {
+    "exit_code": 1,
+    "exception": "UnboundLocalError: local variable log is referenced before assignment",
+    "source": "bin/calls.py:138",
+    "started_predictions": false
+  },
+  "analysis_script_sha256": {
+    "bin/benchmark.py": "2008a4608ff079b896131a34c77a771a66ea71fc9b988a4ba6a8a386783a31a3",
+    "bin/mergeBenchmarks.py": "30269f95745cb622c3b7d208a36ed95196129f8433eb5ae22c95026bab1f9aac",
+    "bin/plot.py": "715ab4cc68f22d7c12511da22a85a681815b78feba0cec44d3b9dccfaafc49f6",
+    "config.txt": "3750fe8b9a82abd4dcf6e67671e64bc98c78d5bf5d4b194cca17a9a988ba1db6"
+  },
+  "missing_rank_sentinel": 9223372036854775807
+}
