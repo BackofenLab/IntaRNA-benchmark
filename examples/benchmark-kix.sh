@@ -26,7 +26,7 @@ run() {
     "$root/intarna-benchmark-local" -b "$binary" "${runner_options[@]}" -c "$id" -- "--threads=$RUNTHREADS" "$@"
 }
 runner_options=("$@")
-run intarna-default
+# seed extension
 for lp in false true; do
     for gu in false true; do
         options=(--model=X "--outNoLP=$lp")
@@ -34,6 +34,15 @@ for lp in false true; do
         run "intarna-X-noLP-$lp-noGU-$gu" "${options[@]}"
     done
 done
+# ensemble-based prediction
+for lp in false true; do
+    for gu in false true; do
+        options=(--model=P "--outNoLP=$lp")
+        if [[ $gu == true ]]; then options+=("${gu_options[@]}"); fi
+        run "intarnaens-X-noLP-$lp-noGU-$gu" "${options[@]}"
+    done
+done
+# kinetic snap prediction
 for score in A B C; do
     for gu in false true; do
         options=(--personality=IntaRNAsnap "--kineticScore=$score")
