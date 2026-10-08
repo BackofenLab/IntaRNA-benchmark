@@ -132,7 +132,10 @@ def main(argv=None):
                 raise ValueError("Install pandas in this Python environment before running the benchmark")
             subprocess.run(["/usr/bin/time", "--version"], check=True, stdout=subprocess.DEVNULL)
         output = args.outfile.resolve() / args.callID
-        output.mkdir(parents=True, exist_ok=False)
+        if not args.callsOnly:
+            output.mkdir(parents=True, exist_ok=False)
+        else:
+            print("# mkdir : " + str(output), file=log, flush=True)
     except (OSError, ValueError, subprocess.CalledProcessError) as error:
         parser.error(str(error))
 
@@ -167,8 +170,11 @@ def main(argv=None):
                 if args.withTargetED:
                     if job["target"] not in ed_files:
                         ed_dir = output / "ED-values" / job["organism"] / job["target_name"]
-                        ed_dir.mkdir(parents=True)
-                        ed_file = ed_dir / "intarna.target.ed"
+                        if not args.callsOnly:
+                            ed_dir.mkdir(parents=True)
+                        else:
+                            print("# mkdir : " + str(ed_dir), file=log, flush=True)
+                        ed_file = ed_dir / "intarna.target.agz"
                         # Same binary, target and parameters as the prediction.
                         # -n 0 skips interactions but still computes accessibility.
                         ed_cpu, ed_memory = execute([binary, *extra, "-q", job["query"], "-t", job["target"],

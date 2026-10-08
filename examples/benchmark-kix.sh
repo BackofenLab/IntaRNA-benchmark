@@ -18,7 +18,8 @@ esac
 run() {
     local id=$1
     shift
-    "$root/intarna-benchmark-local" -b "$binary" "${runner_options[@]}" -c "$id" -- "$@"
+    # running the benchmark with the local runner and precomputed ED
+    "$root/intarna-benchmark-local" -m 100 -e -b "$binary" "${runner_options[@]}" -c "$id" -- "$@"
 }
 runner_options=("$@")
 run intarna-default
@@ -31,7 +32,7 @@ for lp in false true; do
 done
 for score in A B C; do
     for gu in false true; do
-        options=(--personality=IntaRNAkix "--kineticScore=$score")
+        options=(--personality=IntaRNAsnap "--kineticScore=$score")
         if [[ $gu == true ]]; then options+=("${gu_options[@]}"); fi
         run "intarnakix-$score-noGU-$gu" "${options[@]}"
     done
