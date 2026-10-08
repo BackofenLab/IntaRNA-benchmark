@@ -95,10 +95,10 @@ model X baseline. IntaRNAkix always uses no-lonely-pair extensions.
 
 ```bash
 # Inspect all calls without executing IntaRNA.
-./examples/benchmark-kix.sh /path/to/recent/IntaRNA -n -o output/kix-plan
+./examples/benchmark-kix.sh /path/to/recent/IntaRNA -m 80 -o output/kix-plan -n
 
 # Run on the bundled datasets (potentially lengthy).
-./examples/benchmark-kix.sh /path/to/recent/IntaRNA -o output/kix-results
+./examples/benchmark-kix.sh /path/to/recent/IntaRNA -m 80 -o output/kix-results
 
 python3 bin/mergeBenchmarks.py -d output/kix-results -a -o output/kix-comparison.csv
 python3 bin/plot.py -i output/kix-comparison.csv -o output/kix-comparison.pdf \
