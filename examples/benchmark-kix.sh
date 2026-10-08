@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 # Prepare/run the 11 comparisons in BackofenLab/IntaRNA#255 on one computer.
+
+# number of threads to use for IntaRNA calls (default: 4)
+RUNTHREADS=4
+
 set -euo pipefail
 if (( $# < 1 )); then
     echo "Usage: $0 /path/to/IntaRNA [local runner options, e.g. -n -i INPUT -o OUTPUT]" >&2
@@ -19,7 +23,7 @@ run() {
     local id=$1
     shift
     # running the benchmark with the local runner and precomputed ED
-    "$root/intarna-benchmark-local" -m 100 -e -b "$binary" "${runner_options[@]}" -c "$id" -- "$@"
+    "$root/intarna-benchmark-local" -m 80 -e -b "$binary" "${runner_options[@]}" -c "$id" -- "--threads=$RUNTHREADS" "$@"
 }
 runner_options=("$@")
 run intarna-default
