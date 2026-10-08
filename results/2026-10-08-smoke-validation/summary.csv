@@ -1,0 +1,12 @@
+callID;prediction_calls;candidate_pairs;verified_rows;verified_pairs_in_fixture;verified_pairs_recovered;user_cpu_seconds_sum;peak_rss_kib_max
+intarna-X-noLP-false-noGU-false;4;12;11;6;6;8.11;20944
+intarna-X-noLP-false-noGU-true;4;12;11;6;5;7.80;20884
+intarna-X-noLP-true-noGU-false;4;12;11;6;6;7.30;20960
+intarna-X-noLP-true-noGU-true;4;12;11;6;5;7.25;20828
+intarna-default;4;12;11;6;6;8.12;20760
+intarnakix-A-noGU-false;4;12;11;6;6;7.09;20648
+intarnakix-A-noGU-true;4;12;11;6;5;7.02;20752
+intarnakix-B-noGU-false;4;12;11;6;6;7.10;20636
+intarnakix-B-noGU-true;4;12;11;6;5;7.05;20776
+intarnakix-C-noGU-false;4;12;11;6;6;7.05;20744
+intarnakix-C-noGU-true;4;12;11;6;5;7.06;20624
