@@ -10,6 +10,7 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "bin"))
 
 
 def load(name):
@@ -42,7 +43,12 @@ out = pathlib.Path(args[args.index("--out") + 1])
 if "--bad-csv" in args:
     out.write_text("bad;header\\n1;2\\n")
 else:
-    out.write_text("id1;E\\nb2;-4.001\\nb1;-5.001\\nb3;-4.004\\n")
+    columns = next(a.split("=", 1)[1].split(",") for a in args if a.startswith("--outCsvCols="))
+    records = [dict(id1="b2", E="-4.001", Eall="-8", P_E="0.002"),
+               dict(id1="b1", E="-5.001", Eall="-6", P_E="0.001"),
+               dict(id1="b3", E="-4.004", Eall="-10", P_E="0.003")]
+    out.write_text(";".join(columns) + "\\n" + "".join(
+        ";".join(record.get(column, "0") for column in columns) + "\\n" for record in records))
 '''
 
 
@@ -87,6 +93,8 @@ class LocalPipeline(unittest.TestCase):
         self.run_local("quoted", "--", "--energyFile", "path with spaces", "--threads=2")
         run = json.loads((self.output / "quoted" / "run.json").read_text())
         self.assertEqual(run["status"], "complete")
+        self.assertEqual(run["rankColumn"], "E")
+        self.assertEqual(run["csv_columns"].count("E"), 1)
         self.assertEqual(run["memory_unit"], "KiB")
         self.assertEqual(len(run["binary_sha256"]), 64)
         calls = [json.loads(line) for line in self.log.read_text().splitlines()]
@@ -97,14 +105,62 @@ class LocalPipeline(unittest.TestCase):
         self.assertGreater(int(self.read_csv(self.output / "quoted" / "memoryUsage.csv")[0]["ArcZ"]), 0)
 
     def test_dry_run_with_ed_executes_nothing(self):
-        self.run_local("dry", "-n", "-e")
+        self.run_local("dry", "-n", "-e", "--rankColumn=-Eall")
         self.assertFalse(self.log.exists())
         self.assertFalse((self.output / "dry" / "benchmark.csv").exists())
-        self.assertEqual(len((self.output / "dry" / "calls.txt").read_text().splitlines()), 3)
+        commands = (self.output / "dry" / "calls.txt").read_text().splitlines()
+        self.assertEqual(len([line for line in commands if not line.startswith("#")]), 3)
+        self.assertEqual(sum("hybridDP,E,Eall" in line for line in commands), 2)
+        self.assertFalse((self.output / "dry" / "ED-values").exists())
+        self.assertEqual(json.loads((self.output / "dry" / "run.json").read_text())["rankColumn"], "-Eall")
         self.assertEqual(self.read_csv(self.output / "dry" / "runTime.csv")[0]["ArcZ"], "NA")
 
+    def test_selected_columns_and_directions_reach_predictions_and_ranking(self):
+        cases = [("Eall", [3, 1, sys.maxsize, 2]),
+                 ("-Eall", [1, 3, sys.maxsize, 2]),
+                 ("-E", [2, 1, sys.maxsize, 1]),
+                 ("-P_E", [3, 1, sys.maxsize, 2])]
+        for index, (column, expected) in enumerate(cases):
+            with self.subTest(column=column):
+                call_id = "score" + str(index)
+                options = ["-r", column] if not column.startswith("-") else ["--rankColumn=" + column]
+                self.run_local(call_id, *options)
+                run = json.loads((self.output / call_id / "run.json").read_text())
+                self.assertEqual(run["rankColumn"], column)
+                self.assertEqual(run["csv_columns"].count(column.lstrip("-")), 1)
+                rows = self.read_csv(self.output / call_id / "benchmark.csv")
+                self.assertEqual([int(row[call_id + "_intarna_rank"]) for row in rows], expected)
+        # Reversing the ranking must not alter the prediction settings or data.
+        self.assertEqual((self.output / "score0" / "ArcZ_org.csv").read_bytes(),
+                         (self.output / "score1" / "ArcZ_org.csv").read_bytes())
+
+    def test_standalone_reranking_uses_selected_column_and_defaults_to_e(self):
+        self.run_local("rerank", "-r", "Eall")
+        directory = self.output / "rerank"
+        before = (directory / "benchmark.csv").read_bytes()
+        for filename, options, expected in [
+            ("reverse.csv", ["--rankColumn=-Eall"], [1, 3, sys.maxsize, 2]),
+            ("mfe.csv", [], [1, 2, sys.maxsize, 2]),
+        ]:
+            self.command(ROOT / "bin" / "benchmark.py", "-p", self.output, "-c", "rerank",
+                         "-i", self.verified, "-o", filename, *options)
+            rows = self.read_csv(directory / filename)
+            self.assertEqual([int(row["rerank_intarna_rank"]) for row in rows], expected)
+        self.assertEqual((directory / "benchmark.csv").read_bytes(), before)
+        result = self.command(ROOT / "bin" / "benchmark.py", "-p", self.output, "-c", "rerank",
+                              "-i", self.verified, "-o", "missing.csv", "-r", "Zall", success=False)
+        self.assertIn("id1 and Zall", result.stderr)
+        self.assertFalse((directory / "missing.csv").exists())
+
+    def test_invalid_ranking_column_rejected_before_predictions(self):
+        for column in ("", "-", "--Eall", "E,Eall", "E;Eall"):
+            with self.subTest(column=column):
+                self.run_local("invalid-rank", "--rankColumn=" + column, success=False)
+                self.assertFalse((self.output / "invalid-rank").exists())
+                self.assertFalse(self.log.exists())
+
     def test_ed_precomputed_once_per_target_and_preserves_settings(self):
-        self.run_local("ed", "-e", "-m", "60", "--", "--tAccW=90", "--tAccL=60", "--temperature=25")
+        self.run_local("ed", "-e", "-m", "60", "-r", "Eall", "--", "--tAccW=90", "--tAccL=60", "--temperature=25")
         calls = [json.loads(line) for line in self.log.read_text().splitlines()][1:]
         self.assertEqual(len(calls), 3)
         self.assertIn("-n", calls[0])
@@ -113,6 +169,9 @@ class LocalPipeline(unittest.TestCase):
             self.assertIn("--temperature=25", call)
             self.assertIn("--tAccW=90", call)
         self.assertIn("--tAcc=E", calls[1])
+        self.assertFalse(any(arg.startswith("--outCsvCols") for arg in calls[0]))
+        rows = self.read_csv(self.output / "ed" / "benchmark.csv")
+        self.assertEqual([int(row["ed_intarna_rank"]) for row in rows], [3, 1, sys.maxsize, 2])
 
     def test_prediction_failure_propagates(self):
         result = self.run_local("failure", "--", "--fail", success=False)
@@ -211,12 +270,12 @@ class LocalPipeline(unittest.TestCase):
         self.assertIn("different verified interactions", result.stderr)
         self.assertFalse(merged.exists())
 
-    def test_matrix_has_eleven_dry_runs(self):
+    def test_matrix_has_fourteen_dry_runs(self):
         process = subprocess.run(["bash", str(ROOT / "examples" / "benchmark-kix.sh"), str(self.binary),
                                   "-n", "-i", str(self.input), "-o", str(self.output), "-v", str(self.verified)],
                                  env=self.env, cwd=self.base, capture_output=True, text=True)
         self.assertEqual(process.returncode, 0, process.stderr)
-        self.assertEqual(len(list(self.output.glob("*/run.json"))), 11)
+        self.assertEqual(len(list(self.output.glob("*/run.json"))), 14)
         self.assertFalse(self.log.exists())
 
 
@@ -255,6 +314,43 @@ class AnalysisRegressions(unittest.TestCase):
             a.write_text("id1;E\nb1;-5\nb1;-4\nb2;-3\n")
             b.write_text("id1;E\nb3;-3.001\nb4;-2\n")
             self.assertEqual(benchmark.target_ranks([a, b]), {"b1": 1, "b2": 2, "b3": 2, "b4": 3})
+
+    def test_selected_column_dense_ties_across_shards_and_suboptimal_hits(self):
+        benchmark = load("benchmark")
+        with tempfile.TemporaryDirectory() as tmp:
+            a, b = Path(tmp) / "a.csv", Path(tmp) / "b.csv"
+            a.write_text("id1;Eall\nb1;-6\nb1;-6\nb2;-8\n")
+            b.write_text("id1;Eall\nb2;-8\nb3;-8\nb4;-10\n")
+            self.assertEqual(benchmark.target_ranks([a, b], "Eall"), {"b1": 3, "b2": 2, "b3": 2, "b4": 1})
+            self.assertEqual(benchmark.target_ranks([a, b], "-Eall"), {"b1": 1, "b2": 2, "b3": 2, "b4": 3})
+
+    def test_best_target_score_depends_on_direction_and_retains_precision(self):
+        benchmark = load("benchmark")
+        with tempfile.TemporaryDirectory() as tmp:
+            a, b = Path(tmp) / "a.csv", Path(tmp) / "b.csv"
+            a.write_text("id1;P_E\n001;0.001\n002;0.002\n003;0.003\n")
+            b.write_text("id1;P_E\n001;0.004\n003;0.002\n")
+            self.assertEqual(benchmark.target_ranks([a, b], "P_E"), {"001": 1, "002": 2, "003": 2})
+            self.assertEqual(benchmark.target_ranks([a, b], "-P_E"), {"001": 1, "002": 3, "003": 2})
+
+    def test_selected_column_rejects_missing_or_invalid_scores(self):
+        benchmark = load("benchmark")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "invalid.csv"
+            for contents in ("id1;E\nb1;-1\n", "id1;Eall\n;-1\n", *(
+                    "id1;Eall\nb1;" + value + "\n" for value in ("", "NAN", "inf", "-inf", "bad"))):
+                with self.subTest(contents=contents):
+                    path.write_text(contents)
+                    with self.assertRaisesRegex(ValueError, "Eall"):
+                        benchmark.target_ranks([path], "-Eall")
+
+    def test_empty_selected_column_prediction_is_valid(self):
+        benchmark = load("benchmark")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "empty.csv"
+            path.write_text("id1;Eall\n")
+            self.assertEqual(benchmark.target_ranks([path], "Eall"), {})
+            self.assertEqual(benchmark.target_ranks([path], "-Eall"), {})
 
 
 if __name__ == "__main__":

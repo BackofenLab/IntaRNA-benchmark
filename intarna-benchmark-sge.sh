@@ -23,10 +23,11 @@ inputPath="./input/"
 outputPath="./output/"
 intaRNACall=""
 callID=""
+rankColumn="E"
 withED=false
 
 # Handling input
-while getopts "h?s:b:i:o:a:c:e" opt; do
+while getopts "h?s:b:i:o:a:c:r:e" opt; do
     case "$opt" in
     h|\?)
         exit 0
@@ -43,6 +44,8 @@ while getopts "h?s:b:i:o:a:c:e" opt; do
         ;;
     c)  callID=$OPTARG
         ;;
+    r)  rankColumn=$OPTARG
+        ;;
     e)  withED=true
         ;;
     esac
@@ -58,7 +61,7 @@ fi
 # Run benchmark
 if [ "$withED" == true ]
 then
-  python3 $scriptsPath/calls.py -b "$intaRNAbinary" -i "$inputPath" -o "$outputPath" -c "$callID" "$intaRNACall" -e
+  python3 $scriptsPath/calls.py -b "$intaRNAbinary" -i "$inputPath" -o "$outputPath" -c "$callID" "--rankColumn=$rankColumn" "$intaRNACall" -e
 else
-  python3 $scriptsPath/calls.py -b "$intaRNAbinary" -i "$inputPath" -o "$outputPath" -c "$callID" "$intaRNACall"
+  python3 $scriptsPath/calls.py -b "$intaRNAbinary" -i "$inputPath" -o "$outputPath" -c "$callID" "--rankColumn=$rankColumn" "$intaRNACall"
 fi

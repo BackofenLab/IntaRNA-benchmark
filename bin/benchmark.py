@@ -9,6 +9,8 @@ import sys
 
 import pandas as pd
 
+from ranking import add_ranking_argument
+
 
 def prediction_files(directory, verified_keys):
     manifest = directory / "run.json"
@@ -33,19 +35,28 @@ def prediction_files(directory, verified_keys):
     return groups
 
 
-def target_ranks(files):
+def target_ranks(files, rank_column="E"):
+    reverse = rank_column.startswith("-")
+    column = rank_column[1:] if reverse else rank_column
     frames = []
     for path in files:
         frame = pd.read_csv(path, sep=";", dtype={"id1": str})
-        if not {"id1", "E"} <= set(frame.columns):
-            raise ValueError("Prediction must contain id1 and E columns: " + str(path))
-        frame["E"] = pd.to_numeric(frame["E"], errors="raise").round(2)
-        if frame["id1"].isna().any() or frame["E"].isna().any() or frame["E"].isin([float("inf"), -float("inf")]).any():
-            raise ValueError("Missing target ID or nonfinite energy in " + str(path))
-        frames.append(frame[["id1", "E"]])
+        if not {"id1", column} <= set(frame.columns):
+            raise ValueError("Prediction must contain id1 and " + column + " columns: " + str(path))
+        try:
+            scores = pd.to_numeric(frame[column], errors="raise")
+        except ValueError as error:
+            raise ValueError("Nonnumeric ranking value in column " + column + ": " + str(path)) from error
+        if frame["id1"].isna().any() or scores.isna().any() or scores.isin([float("inf"), -float("inf")]).any():
+            raise ValueError("Missing target ID or nonfinite ranking value in column " + column + ": " + str(path))
+        # Keep historical E ties, without losing precision for probabilities
+        # or other user-selected scores on a different scale.
+        if column == "E":
+            scores = scores.round(2)
+        frames.append(pd.DataFrame({"id1": frame["id1"], "score": scores}))
     # Rank targets, not suboptimal interactions; preserve historical dense ties.
-    energies = pd.concat(frames).groupby("id1")["E"].min()
-    return energies.rank(method="dense", ascending=True).astype(int).to_dict()
+    scores = pd.concat(frames).groupby("id1")["score"].agg("max" if reverse else "min")
+    return scores.rank(method="dense", ascending=not reverse).astype(int).to_dict()
 
 
 def main(argv=None):
@@ -54,6 +65,7 @@ def main(argv=None):
     parser.add_argument("-o", "--outfile", type=Path, default=Path("benchmark.csv"))
     parser.add_argument("-p", "--callDirs", type=Path, default=Path("output"))
     parser.add_argument("-c", "--callID", required=True)
+    add_ranking_argument(parser)
     args = parser.parse_args(argv)
     try:
         directory = args.callDirs / args.callID
@@ -74,7 +86,7 @@ def main(argv=None):
             files = groups.get((srna, organism))
             if not files:
                 continue  # Explicitly selected datasets may cover only a subset.
-            ranks = target_ranks(files)
+            ranks = target_ranks(files, args.rankColumn)
             for target, name in targets:
                 rows.append([srna, target, name, ranks.get(target, sys.maxsize)])
         if not rows:

@@ -15,8 +15,12 @@ import subprocess
 import sys
 import tempfile
 
+from ranking import add_ranking_argument
+
 ROOT = Path(__file__).resolve().parent.parent
 FASTA_SUFFIXES = {".fa", ".fasta"}
+# Standard IntaRNA CSV output, extended only when ranking needs another column.
+CSV_COLUMNS = ("id1", "start1", "end1", "id2", "start2", "end2", "subseqDP", "hybridDP", "E")
 
 
 def executable(value):
@@ -105,6 +109,7 @@ def main(argv=None):
     parser.add_argument("-v", "--verified", type=Path, default=ROOT / "verified_interactions.csv")
     parser.add_argument("-m", "--maxInteractionLength", type=int, help="set --tIntLenMax for precomputation AND predictions")
     parser.add_argument("-a", "--arguments", default="", help="quoted IntaRNA options (alternative to --)")
+    add_ranking_argument(parser)
     argv = list(sys.argv[1:] if argv is None else argv)
     if "--" in argv:
         boundary = argv.index("--")
@@ -124,6 +129,10 @@ def main(argv=None):
             extra += ["--tIntLenMax=" + str(args.maxInteractionLength)]
         if "--threads" not in option_names(extra):
             extra.append("--threads=1")
+        csv_columns = list(CSV_COLUMNS)
+        rank_column = args.rankColumn.lstrip("-")
+        if rank_column not in csv_columns:
+            csv_columns.append(rank_column)
         jobs = collect_inputs(args.infile.resolve())
         if not args.verified.is_file():
             raise ValueError("Verified interactions file not found: " + str(args.verified))
@@ -132,14 +141,13 @@ def main(argv=None):
                 raise ValueError("Install pandas in this Python environment before running the benchmark")
             subprocess.run(["/usr/bin/time", "--version"], check=True, stdout=subprocess.DEVNULL)
         output = args.outfile.resolve() / args.callID
-        if not args.callsOnly:
-            output.mkdir(parents=True, exist_ok=False)
-        else:
-            print("# mkdir : " + str(output), file=log, flush=True)
+        # Dry runs still write the manifest, command log and NA measurements.
+        output.mkdir(parents=True, exist_ok=False)
     except (OSError, ValueError, subprocess.CalledProcessError) as error:
         parser.error(str(error))
 
     metadata = dict(callID=args.callID, binary=binary, arguments=extra, predictions=jobs,
+                    rankColumn=args.rankColumn, csv_columns=csv_columns,
                     verified=str(args.verified.resolve()), status="planned" if args.callsOnly else "running",
                     runtime_unit="user CPU seconds", memory_unit="KiB", python=sys.version,
                     precomputation=[])
@@ -184,7 +192,8 @@ def main(argv=None):
                         ed_files[job["target"]] = ed_file
                     prediction_args += ["--tAcc=E", "--tAccFile=" + str(ed_files[job["target"]])]
                 cpu, memory = execute([binary, *prediction_args, "-q", job["query"], "-t", job["target"],
-                                       "--out", str(output / job["output"]), "--outMode=C", "--outNumber=1"])
+                                       "--out", str(output / job["output"]), "--outMode=C", "--outNumber=1",
+                                       "--outCsvCols=" + ",".join(csv_columns)])
                 measurements.append((job, cpu, memory))
 
         # A union header keeps datasets with different query sets rectangular.
@@ -201,7 +210,8 @@ def main(argv=None):
                 writer.writerows(rows.values())
         if not args.callsOnly:
             subprocess.run([sys.executable, str(ROOT / "bin" / "benchmark.py"), "-c", args.callID,
-                            "-i", str(args.verified.resolve()), "-p", str(args.outfile.resolve())], check=True)
+                            "-i", str(args.verified.resolve()), "-p", str(args.outfile.resolve()),
+                            "--rankColumn=" + args.rankColumn], check=True)
             metadata["status"] = "complete"
         save_metadata()
     except (OSError, ValueError, subprocess.CalledProcessError, KeyboardInterrupt) as error:
