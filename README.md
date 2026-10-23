@@ -42,6 +42,7 @@ paths are relative to the caller's directory. Use `--help` for all options:
 | `-n` | Dry run: log commands and `NA` measurements; execute **no** IntaRNA commands |
 | `-e` | Precompute target ED once per target file within this run |
 | `-m LENGTH` | Explicitly set `--tIntLenMax` in both precomputation and prediction |
+| `-r COLUMN`, `--rankColumn=COLUMN` | Numeric CSV column for ranking, default `E`; use `--rankColumn=-COLUMN` for highest first |
 | `-a 'OPTIONS'` | Quoted IntaRNA options, an alternative to arguments after `--` |
 
 Put IntaRNA options after `--` to avoid short-option collisions. For example,
@@ -49,6 +50,10 @@ Put IntaRNA options after `--` to avoid short-option collisions. For example,
 Input/output routing, CSV columns, query/target subsets, parameter files and
 number of predictions are managed by the runner. Each target contributes its
 best interaction (`--outNumber=1`); one query sequence per query FASTA is required.
+The runner requests the standard CSV columns
+`id1,start1,end1,id2,start2,end2,subseqDP,hybridDP,E` and appends the selected
+ranking column if it is not already included. The leading `-` only changes
+ranking direction; it is removed from the requested column name.
 
 Preview a run in its own output directory before launching an expensive job:
 
@@ -61,6 +66,33 @@ with a nonzero exit status. Partial outputs remain available for diagnosis;
 `run.json` records whether the run is planned, running, failed or complete.
 It also records the executable path, version, SHA-256, actual IntaRNA arguments,
 input paths and measurement units. `calls.txt` contains shell-quoted commands.
+The signed `rankColumn` and requested `csv_columns` are also recorded in `run.json`.
+
+To compare minimum-energy and ensemble-energy rankings with identical prediction
+settings, use distinct run IDs and select the score before `--`:
+
+```bash
+./intarna-benchmark-local -b /path/to/IntaRNA -c model-P-E -r E -- --model=P
+./intarna-benchmark-local -b /path/to/IntaRNA -c model-P-Eall -r Eall -- --model=P
+```
+
+These runs can be merged and plotted as usual. For a score where larger values
+are better, use the equals form, for example `--rankColumn=-P_E`; this prevents
+the leading minus from being interpreted as another command-line option.
+The selected column must be supported by the IntaRNA binary and contain finite
+numeric values. Requesting ensemble columns can require additional computation.
+
+Existing predictions can also be ranked again without rerunning IntaRNA, provided
+the selected column is already present. Choose a fresh output filename:
+
+```bash
+python3 bin/benchmark.py -p output -c model-P-Eall -r Eall -o benchmark-Eall.csv
+python3 bin/benchmark.py -p output -c model-P-Eall --rankColumn=-Eall -o benchmark-reversed.csv
+```
+
+Both scripts default to `E` when `-r` is omitted, including standalone reranking
+of a run whose manifest records a different score. Standalone ranking leaves
+the original run manifest and prediction files unchanged.
 
 ### Merge and plot local results
 
@@ -156,13 +188,18 @@ In order to achieve this, the `calls.py` script is used on the query and target 
 This results in a result file for each data set and query RNA.
 These files contain the interaction results produced by IntaRNA.
 
-Predictions are ranked from the most favorable (lowest energy) to the least favorable interaction (highest energy) during analysis.
-The hope is that the verified interactions for each query RNA are amongst the first entries of each file, i.e they have low energy.
-For each verified target, energies are rounded to two decimal places and ranked
-in ascending order. Equal energies share a dense rank (1, 2, 2, 3); a missing
+By default, predictions are ranked from the lowest to the highest `E` value
+during analysis. Select another numeric CSV column using `-r COLUMN`, or use
+`--rankColumn=-COLUMN` to rank by decreasing values (equivalent to ranking
+negated values in ascending order). The hope is that verified interactions for
+each query RNA are amongst the highest-ranked targets.
+The `E` column retains its historical rounding to two decimal places; other
+columns retain their numeric precision, including probabilities below 0.01.
+Equal scores share a dense rank (1, 2, 2, 3); a missing
 prediction receives `sys.maxsize` and never counts as a recovered interaction
 at the plotted thresholds. When a target occurs more than once, only its best
-energy contributes. Target shards for the same query and organism are ranked
+score contributes: the minimum normally, or the maximum with a leading `-`.
+Target shards for the same query and organism are ranked
 together. Lower ranks indicate better recovery. Explicit input subsets produce
 rows only for query/organism combinations included in that run.
 
@@ -188,6 +225,7 @@ __Parameters:__
 * __callsOnly (`-n`)__ generates the calls and saves them in a log file without starting the process.
 * __verified (`-v`)__ the path and file containing the verified interactions.
 * __maxInteractionLength (`-m`)__ The maximum target interaction length for both precomputation and prediction. Default: use the binary's own settings
+* __rankColumn (`-r`)__ Numeric CSV column used for ranking. Default: `E` (lowest first). Use `--rankColumn=-COLUMN` for highest first. The column is added to the IntaRNA output and passed to `benchmark.py`.
 
 __IMPORTANT:__ Arguments for IntaRNA can be added at the end of the script call and will be redirected to IntaRNA. `python3 bin/calls.py -c callID -- --model=X`
 
@@ -222,10 +260,11 @@ __Parameters:__
 * __outfile (`-o`)__ the name of the output file. Default: `benchmark.csv` within the callID directory
 * __callDirs (`-p`)__ the location where the output of the calls.py script lies. Default: `./output/`
 * __callID (`-c`)__ mandatory ID to differentiate between multiple benchmarkings.
+* __rankColumn (`-r`)__ Numeric column already present in the prediction CSVs. Default: `E` (lowest first). Use `--rankColumn=-COLUMN` for highest first.
 
 This script uses the output of the `calls.py` script. It is called automatically at the end of the `calls.py` script.
 It matches predictions to verified query/organism pairs, computes the dense
-energy ranks described above, and writes the result CSV. New runs use the exact
+score ranks described above, and writes the result CSV. New runs use the exact
 input mapping from `run.json`; historical runs use query and organism filenames.
 Malformed predictions and empty benchmark matches fail with a nonzero status.
 
